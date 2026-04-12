@@ -4,11 +4,14 @@ import de.upteams.tasktracker.utils.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.ColumnDefault;
+
+import static de.upteams.tasktracker.user.constants.UserValidationConstats.PASSWORD_REGEX;
 
 /**
  * Application User entity
@@ -20,7 +23,11 @@ import org.hibernate.annotations.ColumnDefault;
 @Table(name = "app_user")
 public class AppUser extends BaseEntity {
 
-    @NotBlank
+    @NotBlank(message = "{user.password.notBlank}")
+    @Pattern(
+            regexp = PASSWORD_REGEX,
+            message = "{user.password.invalid}"
+    )
     @Column(name = "password", nullable = false)
     private String password;
 
