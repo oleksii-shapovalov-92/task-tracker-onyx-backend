@@ -1,5 +1,6 @@
 package de.upteams.tasktracker.user.entity;
 
+import de.upteams.tasktracker.user.validation.ValidEmail;
 import de.upteams.tasktracker.utils.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -32,6 +33,7 @@ public class AppUser extends BaseEntity {
     private String password;
 
     @NotBlank(message = "{user.email.notBlank}")
+    @ValidEmail
     @Column(
             name = "email",
             unique = true,

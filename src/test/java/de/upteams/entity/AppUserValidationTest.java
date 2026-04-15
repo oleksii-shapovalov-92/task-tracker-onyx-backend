@@ -119,9 +119,46 @@ public class AppUserValidationTest {
                 .anyMatch(violation -> "password".equals(violation.getPropertyPath().toString()));
     }
 
+    @Test
+    @DisplayName("Should pass validation when email is valid")
+    void shouldPassValidationWhenEmailIsValid() {
+        AppUser appUser = buildValidUser();
+        appUser.setEmail("test@example.com");
+
+        Set<ConstraintViolation<AppUser>> violations = validator.validate(appUser);
+
+        assertThat(violations)
+                .noneMatch(violation -> "email".equals(violation.getPropertyPath().toString()));
+    }
+
+    @Test
+    @DisplayName("Should fail validation when email is invalid")
+    void shouldFailValidationWhenEmailIsInvalid() {
+        AppUser appUser = buildValidUser();
+        appUser.setEmail("plaintext");
+
+        Set<ConstraintViolation<AppUser>> violations = validator.validate(appUser);
+
+        assertThat(violations)
+                .anyMatch(violation -> "email".equals(violation.getPropertyPath().toString()));
+    }
+
+    @Test
+    @DisplayName("Should fail validation when email is blank")
+    void shouldFailValidationWhenEmailIsBlank() {
+        AppUser appUser = buildValidUser();
+        appUser.setEmail("   ");
+
+        Set<ConstraintViolation<AppUser>> violations = validator.validate(appUser);
+
+        assertThat(violations)
+                .anyMatch(violation -> "email".equals(violation.getPropertyPath().toString()));
+    }
+
     private AppUser buildValidUser() {
         AppUser appUser = new AppUser();
         appUser.setEmail("test@example.com");
+        appUser.setPassword("ValidPassword123!");
         appUser.setRole(Role.ROLE_USER);
         appUser.setConfirmationStatus(ConfirmationStatus.UNCONFIRMED);
         return appUser;
