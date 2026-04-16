@@ -6,6 +6,8 @@ import de.upteams.tasktracker.user.dto.response.UserCreateResponseDto;
 import de.upteams.tasktracker.user.dto.response.UserResponseDto;
 import de.upteams.tasktracker.user.service.impl.UserRegisterService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,7 +24,8 @@ public class RegisterControllerImpl implements RegisterControllerApi {
     }
 
     @Override
-    public UserResponseDto confirmRegistration(String code) {
+    @GetMapping("/confirm/{code}")
+    public UserResponseDto confirmRegistration(@PathVariable String code) {
         return service.confirmRegistration(code);
     }
 }
