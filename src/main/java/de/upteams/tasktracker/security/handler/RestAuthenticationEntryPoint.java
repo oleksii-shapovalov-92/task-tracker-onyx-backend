@@ -22,7 +22,7 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
                 LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
                 HttpServletResponse.SC_UNAUTHORIZED,
                 "Unauthorized",
-                authException.getMessage(),
+                "Authentication is required to access this resource.",
                 request.getRequestURI()
         );
         ErrorResponseWriter.write(response, error);

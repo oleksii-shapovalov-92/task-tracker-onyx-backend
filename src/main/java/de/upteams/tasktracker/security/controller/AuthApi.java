@@ -45,7 +45,7 @@ public interface AuthApi {
                                       "timestamp": "2025-06-26T13:41:32.3327347",
                                       "status": 401,
                                       "error": "Unauthorized",
-                                      "message": "User not found: <user email>",
+                                      "message": "Invalid username or password.",
                                       "path": "/api/v1/auth/login"
                                     }
                                     """)
