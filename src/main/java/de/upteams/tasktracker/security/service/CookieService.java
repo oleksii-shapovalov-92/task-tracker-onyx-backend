@@ -13,6 +13,9 @@ public class CookieService {
     @Value("${jwt.rt.live-in-min}")
     private int refreshTokenLiveInMinutes;
 
+    @Value("${app.cookie.secure:true}")
+    public boolean cookieSecure;
+
     public Cookie generateLogoutCookie(final String cookieName) {
         final Cookie cookie = new Cookie(cookieName, null);
         configureCommonCookieSettings(cookie);
@@ -36,7 +39,7 @@ public class CookieService {
 
     private void configureCommonCookieSettings(final Cookie cookie) {
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);
+        cookie.setSecure(cookieSecure);
         cookie.setPath("/");
     }
 

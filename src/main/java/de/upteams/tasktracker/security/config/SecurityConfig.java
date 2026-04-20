@@ -87,6 +87,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh-token").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()
 
+                        .requestMatchers("/error").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

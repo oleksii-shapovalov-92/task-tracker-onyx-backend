@@ -35,6 +35,6 @@ public record ProjectResponseDto(
         @Schema(
                 description = "The User who created the Project",
                 accessMode = Schema.AccessMode.READ_ONLY)
-        EmployeeDto owner) {
+        ProjectOwnerDto owner) {
 
 }

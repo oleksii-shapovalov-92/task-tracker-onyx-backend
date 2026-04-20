@@ -14,5 +14,6 @@ import org.mapstruct.MappingConstants;
 )
 public interface AppUserMapper {
 
+
     UserResponseDto mapEntityToDto(AppUser entity);
 }

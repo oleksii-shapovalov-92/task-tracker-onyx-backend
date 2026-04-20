@@ -32,6 +32,8 @@ confirmation:
 
 app:
   base-url: ${BASE_URL}
+  cookie:
+    secure: ${APP_COOKIE_SECURE:true}
 
 digitalocean:
   spaces:

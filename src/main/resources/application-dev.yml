@@ -42,6 +42,8 @@ confirmation:
 
 app:
   base-url: ${BASE_URL:http://localhost:8080}
+  cookie:
+    secure: ${APP_COOKIE_SECURE:false}
 
 digitalocean:
   spaces:
