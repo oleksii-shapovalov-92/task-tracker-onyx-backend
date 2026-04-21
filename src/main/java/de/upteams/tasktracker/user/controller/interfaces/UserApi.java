@@ -1,6 +1,7 @@
 package de.upteams.tasktracker.user.controller.interfaces;
 
 import de.upteams.tasktracker.user.dto.response.UserResponseDto;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,4 +19,8 @@ public interface UserApi extends UserApiSwaggerDoc {
     @GetMapping("/all")
     @PreAuthorize("hasRole('ADMIN')")
     List<UserResponseDto> getAll();
+
+
+    @GetMapping("/me")
+    ResponseEntity<UserResponseDto> getCurrentUser();
 }

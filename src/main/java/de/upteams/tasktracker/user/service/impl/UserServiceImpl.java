@@ -8,6 +8,8 @@ import de.upteams.tasktracker.user.service.UserService;
 import de.upteams.tasktracker.user.util.AppUserMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -57,5 +59,28 @@ public class UserServiceImpl implements UserService {
                 .stream()
                 .map(mappingService::mapEntityToDto)
                 .toList();
+    }
+
+    @Override
+    public UserResponseDto getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        AppUser user = repository.findByEmailIgnoreCase(email)
+                .orElseThrow(UserNotFoundException::new);
+        return mapToUserResponseDto(user);
+    }
+
+    private UserResponseDto mapToUserResponseDto(AppUser user) {
+        return new UserResponseDto(
+                user.getDisplayName(),
+                user.getPosition(),
+                user.getDepartment(),
+                user.getAvatarUrl(),
+                user.getBio(),
+                user.getEmail(),
+                user.getRole().name(),
+                user.getConfirmationStatus()
+        );
     }
 }

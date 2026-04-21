@@ -20,4 +20,6 @@ public interface UserService {
     AppUser getByIdOrThrow(String id);
 
     List<UserResponseDto> getAll();
+
+    UserResponseDto getCurrentUser();
 }

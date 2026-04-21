@@ -3,6 +3,7 @@ package de.upteams.tasktracker.user.controller.interfaces;
 import de.upteams.tasktracker.exception.handling.response.ErrorResponseDto;
 import de.upteams.tasktracker.exception.handling.response.ValidationErrorDto;
 import de.upteams.tasktracker.user.dto.request.UserCreateDto;
+import de.upteams.tasktracker.user.dto.response.UserConfirmationResponseDto;
 import de.upteams.tasktracker.user.dto.response.UserCreateResponseDto;
 import de.upteams.tasktracker.user.dto.response.UserResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -95,7 +96,7 @@ public interface RegisterControllerApi {
             )
     })
     @GetMapping("/confirm/{code}")
-    UserResponseDto confirmRegistration(
+    UserConfirmationResponseDto confirmRegistration(
             @PathVariable
             String code
     );

@@ -6,13 +6,15 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.validator.constraints.URL;
 
-import static de.upteams.tasktracker.user.constants.UserValidationConstats.PASSWORD_REGEX;
+import static de.upteams.tasktracker.user.constants.UserValidationConstants.PASSWORD_REGEX;
 
 /**
  * Application User entity
@@ -51,12 +53,54 @@ public class AppUser extends BaseEntity {
     @NotNull(message = "{field.notNull}")
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private Role role = Role.ROLE_USER;
+
+
+    @Size(max = 100, message = "{user.displayName.size}")
+    @Column(
+            name = "display_name",
+            nullable = false)
+    private String displayName = "";
+
+    @Size(max = 100, message = "{user.position.size}")
+    @Column(
+            name = "position",
+            nullable = false)
+    private String position = "";
+
+    @Size(max = 100, message = "{user.department.size}")
+    @Column(
+            name = "department",
+            nullable = false)
+    private String department = "";
+
+
+    @Size(max = 2048, message = "{user.avatarUrl.size}")
+    @URL(message = "{user.avatarUrl.invalid}")
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
+    @Size(max = 1000, message = "{user.bio.size}")
+    @Column(
+            name = "bio",
+            nullable = false)
+    private String bio = "";
+
 
     public AppUser(String password, String email) {
         this.password = password;
         this.email = email;
-        role = Role.ROLE_USER;
+    }
+
+    public AppUser(String email, Role role, String displayName, String position,
+                   String department, String avatarUrl, String bio) {
+        this.email = email;
+        this.role = role == null ? Role.ROLE_USER : role;
+        this.displayName = StringUtils.defaultString(displayName);
+        this.position = StringUtils.defaultString(position);
+        this.department = StringUtils.defaultString(department);
+        this.avatarUrl = avatarUrl;
+        this.bio = StringUtils.defaultString(bio);
     }
 
     @Override
@@ -67,6 +111,9 @@ public class AppUser extends BaseEntity {
                 ", password='" + (StringUtils.isBlank(password) ? "null" : "*hidden*") + '\'' +
                 ", email='" + email + '\'' +
                 ", role=" + role +
+                ", displayName='" + displayName + '\'' +
+                ", position='" + position + '\'' +
+                ", department='" + department + '\'' +
                 '}';
     }
 }

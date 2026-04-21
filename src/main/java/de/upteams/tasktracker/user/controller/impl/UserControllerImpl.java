@@ -4,6 +4,7 @@ import de.upteams.tasktracker.user.controller.interfaces.UserApi;
 import de.upteams.tasktracker.user.dto.response.UserResponseDto;
 import de.upteams.tasktracker.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -23,5 +24,10 @@ public class UserControllerImpl implements UserApi {
     @Override
     public List<UserResponseDto> getAll() {
         return service.getAll();
+    }
+
+    @Override
+    public ResponseEntity<UserResponseDto> getCurrentUser() {
+        return ResponseEntity.ok(service.getCurrentUser());
     }
 }

@@ -4,8 +4,8 @@ import de.upteams.tasktracker.mail.EmailService;
 import de.upteams.tasktracker.mail.confirmation.code.ConfirmationCode;
 import de.upteams.tasktracker.mail.confirmation.code.interfaces.ConfirmationService;
 import de.upteams.tasktracker.user.dto.request.UserCreateDto;
+import de.upteams.tasktracker.user.dto.response.UserConfirmationResponseDto;
 import de.upteams.tasktracker.user.dto.response.UserCreateResponseDto;
-import de.upteams.tasktracker.user.dto.response.UserResponseDto;
 import de.upteams.tasktracker.user.entity.AppUser;
 import de.upteams.tasktracker.user.exception.UserAlreadyExistException;
 import de.upteams.tasktracker.user.service.UserService;
@@ -67,7 +67,7 @@ public class UserRegisterService {
     }
 
     @Transactional
-    public UserResponseDto confirmRegistration(final String code) {
+    public UserConfirmationResponseDto confirmRegistration(final String code) {
         final ConfirmationCode confirmationToken = confirmationService.getConfirmationIfValidOrThrow(code);
 
         final AppUser registeredUser = confirmationToken.getUser();
@@ -76,7 +76,7 @@ public class UserRegisterService {
 
         confirmationService.removeToken(confirmationToken);
 
-        return new UserResponseDto(
+        return new UserConfirmationResponseDto(
                 registeredUser.getEmail(),
                 registeredUser.getRole().name(),
                 registeredUser.getConfirmationStatus()

@@ -1,6 +1,7 @@
 package de.upteams.tasktracker.user.controller.interfaces;
 
 import de.upteams.tasktracker.exception.handling.response.ErrorResponseDto;
+import de.upteams.tasktracker.user.dto.response.UserConfirmationResponseDto;
 import de.upteams.tasktracker.user.dto.response.UserResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -43,4 +45,30 @@ public interface UserApiSwaggerDoc {
             )
     })
     List<UserResponseDto> getAll();
+
+
+    @Operation(
+            summary = "Get current users",
+            description = "Returns a JSON with current user data"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "User retrieved successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UserConfirmationResponseDto.class)
+
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    ResponseEntity<UserResponseDto> getCurrentUser();
 }

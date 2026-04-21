@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
-import static de.upteams.tasktracker.user.constants.UserValidationConstats.PASSWORD_REGEX;
+import static de.upteams.tasktracker.user.constants.UserValidationConstants.PASSWORD_REGEX;
 
 public record UserCreateDto(
 
