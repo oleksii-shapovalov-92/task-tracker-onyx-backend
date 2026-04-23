@@ -54,6 +54,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void delete(String id) {
-        repository.deleteById(UUID.fromString(id));
+        Project existedProject = getOrTrow(id);
+        repository.delete(existedProject);
     }
 }
