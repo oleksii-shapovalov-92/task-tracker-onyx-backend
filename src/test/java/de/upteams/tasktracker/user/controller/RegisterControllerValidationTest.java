@@ -15,11 +15,15 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import de.upteams.tasktracker.user.exception.UserAlreadyExistException;
+import org.junit.jupiter.api.Test;
 
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @WebMvcTest(RegisterControllerImpl.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -94,5 +98,28 @@ public class RegisterControllerValidationTest {
                 .andExpect(jsonPath("$.errors[0].field").value("email"));
 
         verifyNoInteractions(userRegisterService);
+    }
+
+    @Test
+    @DisplayName("Should return 409 Conflict when confirmed user with same email already exists")
+    void shouldReturn409WhenConfirmedUserAlreadyExists() throws Exception {
+        String requestBody = """
+            {
+              "email": "serdar_test@upteams.de",
+              "password": "Test12345!"
+            }
+            """;
+
+        when(userRegisterService.register(any()))
+                .thenThrow(new UserAlreadyExistException());
+
+        mockMvc.perform(post("/api/v1/users/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("User already exists"))
+                .andExpect(jsonPath("$.path").value("/api/v1/users/register"));
     }
 }
