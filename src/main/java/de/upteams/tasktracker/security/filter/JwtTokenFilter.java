@@ -31,6 +31,20 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     private final JwtTokenService jwtTokenService;
 
     @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        String path = request.getServletPath();
+
+        return path.startsWith("/api/v1/auth/")
+                || path.equals("/api/v1/users/register")
+                || path.startsWith("/api/v1/users/confirm/")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui")
+                || path.equals("/swagger-ui.html")
+                || path.startsWith("/webjars/")
+                || path.equals("/error");
+    }
+
+    @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
@@ -39,24 +53,24 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         String token = resolveToken(request);
         final JwtTokenService.TokenType tokenType = JwtTokenService.TokenType.ACCESS;
 
-        if (StringUtils.isNoneBlank(token)) {
+        if (StringUtils.isNotBlank(token)) {
             try {
                 if (jwtTokenService.validateToken(token, tokenType)) {
                     final String username = jwtTokenService.getUsernameFromToken(token, tokenType);
                     final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
+
+                    UsernamePasswordAuthenticationToken auth =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+
                     auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(auth);
-
                 }
             } catch (ExpiredJwtException ex) {
                 SecurityContextHolder.clearContext();
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
             }
         }
 
@@ -64,14 +78,13 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Extracts JWT token from Authorization header or cookie.
+     * Extracts JWT token from cookie.
      */
     private String resolveToken(HttpServletRequest request) {
         Cookie cookie = WebUtils.getCookie(request, ACCESS_TOKEN_COOKIE);
         if (cookie != null) {
             return cookie.getValue();
-        } else {
-            return null;
         }
+        return null;
     }
 }

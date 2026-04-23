@@ -1,5 +1,12 @@
 package de.upteams.tasktracker.security.controller;
 
+import de.upteams.tasktracker.security.dto.ForgotPasswordRequestDto;
+import de.upteams.tasktracker.security.dto.ResetPasswordRequestDto;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+
 import de.upteams.tasktracker.exception.handling.response.ErrorResponseDto;
 import de.upteams.tasktracker.security.dto.LoginRequest;
 import de.upteams.tasktracker.security.entities.RefreshRequestDto;
@@ -13,8 +20,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
@@ -52,27 +58,21 @@ public interface AuthApi {
                     )
             )
     })
+
     @PostMapping("/login")
-    TokenResponseDto login(
-            @RequestBody
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    required = true,
-                    description = "Instance of User with name and password"
-            )
-            @Valid
-            LoginRequest loginRequest,
-            HttpServletResponse response
-    );
+    TokenResponseDto login(@RequestBody @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+            description = "Instance of User with name and password"
+
+
+    )
+
+                           @Valid LoginRequest loginRequest, HttpServletResponse response);
 
     @Operation(summary = "Get new access token", description = "Obtain new access token using a refresh token")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "New access token granted",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = TokenResponseDto.class)))
-            ,
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "New access token granted",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = TokenResponseDto.class))),
             @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponseDto.class),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDto.class),
                             examples = @ExampleObject(value = """
                                     {
                                       "timestamp": 1627660173000,
@@ -81,32 +81,25 @@ public interface AuthApi {
                                       "message": "Refresh token is invalid or expired",
                                       "path": "/api/v1/auth/refresh-token"
                                     }
-                                    """))
-            )
-    })
+                                    """)))})
     @PostMapping("/refresh-token")
-    TokenResponseDto refreshAccessToken(
-            @RequestBody
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    required = true,
-                    description = "Request that contains refresh token"
-            )
-            RefreshRequestDto request,
-            HttpServletResponse response
-    );
+    TokenResponseDto refreshAccessToken(@RequestBody @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "Request that contains refresh token") RefreshRequestDto request, HttpServletResponse response);
 
     @Operation(summary = "Logout", description = "User logout")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Logout successful",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = TokenResponseDto.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                      "accessToken": null,
-                                      "refreshToken": null
-                                    }
-                                    """)))
-    })
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Logout successful", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TokenResponseDto.class), examples = @ExampleObject(value = """
+            {
+              "accessToken": null,
+              "refreshToken": null
+            }
+            """)))})
     @PostMapping("/logout")
     TokenResponseDto logout(HttpServletResponse response);
+
+    @PostMapping("/forgot-password")
+    ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordRequestDto request);
+
+    @PostMapping("/reset-password")
+    ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequestDto request);
+
+
 }

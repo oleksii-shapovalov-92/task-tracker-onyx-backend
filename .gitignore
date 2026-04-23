@@ -1,62 +1,61 @@
 # =========================
 # Gradle
 # =========================
-.gradle/                              # Gradle local cache
-build/                                # Top-level build output
-**/build/                             # Build output in any submodule
-!gradle/wrapper/gradle-wrapper.jar    # Keep the Gradle wrapper JAR
-!gradle/wrapper/gradle-wrapper.properties # Keep wrapper properties
-gradlew                               # Gradle wrapper script (Linux/Mac)
-gradlew.bat                           # Gradle wrapper script (Windows)
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
 
 # =========================
 # Eclipse / STS
 # =========================
-.apt_generated/                       # annotation processors
+.apt_generated/
 .classpath
 .factorypath
 .project
-.settings/                            # IDE settings
+.settings/
 .springBeans
-.sts4-cache                           # STS cache
-bin/                                  # Eclipse output
-**/bin/                               # module-level bin dirs
+.sts4-cache
+bin/
+**/bin/
 
 # =========================
 # IntelliJ IDEA
 # =========================
-.idea/                                # project settings
-*.iws                                 # IDEA workspace
-*.iml                                 # module files
-*.ipr                                 # project files
-out/                                  # IntelliJ build output
-**/out/                               # module-level out dirs
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+**/out/
 
 # =========================
 # NetBeans
 # =========================
-nbproject/private/                    # user-specific NB settings
-nbbuild/                              # NB build output
-dist/                                 # NB distribution
+nbproject/private/
+nbbuild/
+dist/
 nbdist/
-.nb-gradle/                           # NB-Gradle integration
+.nb-gradle/
 
 # =========================
 # Visual Studio Code
 # =========================
-.vscode/                              # VS Code settings
+.vscode/
 
 # =========================
 # OS generated files
 # =========================
-.DS_Store                             # macOS Finder
-Thumbs.db                             # Windows Explorer
+.DS_Store
+Thumbs.db
 
 # =========================
 # Logs and temporary
 # =========================
-*.log                                 # log files
-*.tmp                                 # temp files
+*.log
+*.tmp
 
 # =========================
 # Custom

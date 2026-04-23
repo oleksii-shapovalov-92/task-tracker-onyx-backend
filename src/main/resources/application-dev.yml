@@ -8,9 +8,9 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
       ddl-auto: update
+    open-in-view: false
     show-sql: true
     properties:
       hibernate:
@@ -31,6 +31,7 @@ spring:
             protocols: TLSv1.2
             trust: smtp.gmail.com
 
+
 logging:
   level:
     #    root: debug
@@ -40,10 +41,14 @@ confirmation:
   expiration:
     days: ${CONFIRMATION_EXPIRATION_DAYS:5}
 
+
+
 app:
   base-url: ${BASE_URL:http://localhost:8080}
-  cookie:
-    secure: ${APP_COOKIE_SECURE:false}
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+
+cookie:
+  secure: ${APP_COOKIE_SECURE:false}
 
 digitalocean:
   spaces:

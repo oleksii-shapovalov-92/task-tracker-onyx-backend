@@ -72,6 +72,8 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/error").permitAll()
+
                         // Swagger UI и спецификация — только GET
                         .requestMatchers(HttpMethod.GET, "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll()
@@ -87,7 +89,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh-token").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()
 
-                        .requestMatchers("/error").permitAll()
+// Password reset
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/forgot-password").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/reset-password").permitAll()
 
                         .anyRequest().authenticated()
                 )
