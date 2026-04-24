@@ -1,6 +1,5 @@
-package de.upteams.tasktracker.task.dto;
+package de.upteams.tasktracker.task.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.upteams.tasktracker.project.dto.response.ProjectResponseDto;
 import de.upteams.tasktracker.user.dto.EmployeeDto;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -9,13 +8,9 @@ import lombok.Value;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Task DTO
- */
 @Schema(description = "Data Transfer Object for Task entity")
 @Value
-public class TaskDto {
-
+public class TaskResponseDto {
     @Schema(
             description = "Unique identifier of the Task",
             example = "5",
@@ -23,7 +18,9 @@ public class TaskDto {
     )
     String id;
 
-    @Schema(description = "Title of the Task", example = "Implement repository layer")
+    @Schema(
+            description = "Title of the Task",
+            example = "Implement repository layer")
     String title;
 
     @Schema(
@@ -32,7 +29,6 @@ public class TaskDto {
     )
     String description;
 
-    @JsonIgnore
     @Schema(
             description = "The Project whit which this Task is associated",
             accessMode = Schema.AccessMode.READ_ONLY
@@ -44,5 +40,4 @@ public class TaskDto {
             accessMode = Schema.AccessMode.READ_ONLY
     )
     Set<EmployeeDto> executors = new HashSet<>();
-
 }

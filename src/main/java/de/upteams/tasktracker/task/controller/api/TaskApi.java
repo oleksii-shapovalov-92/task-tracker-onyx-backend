@@ -3,7 +3,8 @@ package de.upteams.tasktracker.task.controller.api;
 import de.upteams.tasktracker.exception.handling.response.ErrorResponseDto;
 import de.upteams.tasktracker.exception.handling.response.ValidationErrorDto;
 import de.upteams.tasktracker.security.service.AuthUserDetails;
-import de.upteams.tasktracker.task.dto.TaskDto;
+import de.upteams.tasktracker.task.dto.request.TaskCreateDto;
+import de.upteams.tasktracker.task.dto.response.TaskResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -13,6 +14,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +31,7 @@ public interface TaskApi {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Task successfully created",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = TaskDto.class),
+                            schema = @Schema(implementation = TaskResponseDto.class),
                             examples = @ExampleObject(value = """
                                     {
                                       "id": "5",
@@ -44,7 +47,7 @@ public interface TaskApi {
                             array = @ArraySchema(schema = @Schema(implementation = ValidationErrorDto.class)),
                             examples = @ExampleObject(value = """
                                     [
-                                      { "field": "title", "messages": ["must not be blank"] }
+                                      { "field": "projectId", "messages": ["must not be blank"] }
                                     ]
                                     """))
             ),
@@ -60,12 +63,27 @@ public interface TaskApi {
                                       "path": "/api/v1/tasks"
                                     }
                                     """))
+            ),
+            @ApiResponse(responseCode = "404", description = "Project not found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "timestamp": "2025-04-26T10:00:00",
+                                      "status": 404,
+                                      "error": "Not Found",
+                                      "message": "Project not found",
+                                      "path": "/api/v1/tasks"
+                                    }
+                                    """))
             )
     })
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    TaskDto save(
+    TaskResponseDto save(
             @RequestBody
-            TaskDto task,
+            @Valid
+            TaskCreateDto task,
 
             @AuthenticationPrincipal
             @Parameter(hidden = true)
@@ -76,7 +94,20 @@ public interface TaskApi {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Task found",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = TaskDto.class)))
+                            schema = @Schema(implementation = TaskResponseDto.class)))
+            ,
+            @ApiResponse(responseCode = "400", description = "Invalid task ID format",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "timestamp": "2025-04-26T10:00:00",
+                                      "status": 400,
+                                      "error": "Bad Request",
+                                      "message": "Invalid taskId format",
+                                      "path": "/api/v1/tasks/invalid-id"
+                                    }
+                                    """)))
             ,
             @ApiResponse(responseCode = "404", description = "Task not found",
                     content = @Content(mediaType = "application/json",
@@ -93,7 +124,7 @@ public interface TaskApi {
             )
     })
     @GetMapping("/{id}")
-    TaskDto getById(
+    TaskResponseDto getById(
             @PathVariable
             String id,
 
@@ -106,15 +137,41 @@ public interface TaskApi {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "List of tasks",
                     content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = TaskDto.class))))
+                            array = @ArraySchema(schema = @Schema(implementation = TaskResponseDto.class))))
+            ,
+            @ApiResponse(responseCode = "400", description = "Invalid project ID format",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "timestamp": "2025-04-26T10:00:00",
+                                      "status": 400,
+                                      "error": "Bad Request",
+                                      "message": "Invalid projectId format",
+                                      "path": "/api/v1/tasks/project/invalid-id"
+                                    }
+                                    """)))
             ,
             @ApiResponse(responseCode = "403", description = "Forbidden - user has no access to the project",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class))
+            ),
+            @ApiResponse(responseCode = "404", description = "Project not found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "timestamp": "2025-04-26T10:00:00",
+                                      "status": 404,
+                                      "error": "Not Found",
+                                      "message": "Project not found",
+                                      "path": "/api/v1/tasks/project/550e8400-e29b-41d4-a716-446655440000"
+                                    }
+                                    """))
             )
     })
     @GetMapping("/project/{projectId}")
-    List<TaskDto> getAll(
+    List<TaskResponseDto> getAll(
             @PathVariable
             String projectId,
 
@@ -126,6 +183,19 @@ public interface TaskApi {
     @Operation(summary = "Delete Task", description = "Deletes a task by its ID")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Task deleted successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid task ID format",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "timestamp": "2025-04-26T10:00:00",
+                                      "status": 400,
+                                      "error": "Bad Request",
+                                      "message": "Invalid taskId format",
+                                      "path": "/api/v1/tasks/invalid-id"
+                                    }
+                                    """)))
+            ,
             @ApiResponse(responseCode = "404", description = "Task not found",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class)))
@@ -134,6 +204,7 @@ public interface TaskApi {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class)))
     })
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
     void deleteById(
             @PathVariable

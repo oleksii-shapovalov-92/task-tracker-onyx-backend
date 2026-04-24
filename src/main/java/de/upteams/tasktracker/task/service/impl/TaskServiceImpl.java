@@ -5,7 +5,8 @@ import de.upteams.tasktracker.collaborator.service.interfaces.CollaboratorServic
 import de.upteams.tasktracker.exception.handling.exceptions.common.RestApiException;
 import de.upteams.tasktracker.project.entity.Project;
 import de.upteams.tasktracker.project.service.interfaces.ProjectService;
-import de.upteams.tasktracker.task.dto.TaskDto;
+import de.upteams.tasktracker.task.dto.request.TaskCreateDto;
+import de.upteams.tasktracker.task.dto.response.TaskResponseDto;
 import de.upteams.tasktracker.task.entity.Task;
 import de.upteams.tasktracker.task.exception.TaskNotFoundException;
 import de.upteams.tasktracker.task.persistence.TaskRepository;
@@ -33,13 +34,20 @@ public class TaskServiceImpl implements TaskService {
     private final CollaboratorService collaboratorService;
 
     @Override
-    public TaskDto save(final TaskDto newTaskDto) {
-        final Task entity = mappingService.mapDtoToEntity(newTaskDto);
+    public TaskResponseDto save(final TaskCreateDto newTaskDto, final AppUser authUser) {
+        final Project project = projectService.getOrTrow(newTaskDto.projectId());
+        final boolean userInProject = collaboratorService.isUserInProject(authUser, project);
+        if (!userInProject) {
+            throw new RestApiException(HttpStatus.FORBIDDEN, "User has no access to this project");
+        }
+
+        final Task entity = mappingService.mapCreateDtoToEntity(newTaskDto);
+        entity.setProject(project);
         return mappingService.mapEntityToDto(repository.save(entity));
     }
 
     @Override
-    public TaskDto getById(String id) {
+    public TaskResponseDto getById(String id) {
         return mappingService.mapEntityToDto(getOrThrow(id));
     }
 
@@ -51,12 +59,20 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Task> findById(String id) {
+        final UUID taskId;
+
+        try {
+            taskId = UUID.fromString(id);
+        } catch (IllegalArgumentException ex) {
+            throw new RestApiException(HttpStatus.BAD_REQUEST, "Invalid taskId format");
+        }
+
         return repository
-                .findById(UUID.fromString(id));
+                .findById(taskId);
     }
 
     @Override
-    public List<TaskDto> getAll(final String projectId, final AppUser authUser) {
+    public List<TaskResponseDto> getAll(final String projectId, final AppUser authUser) {
         final Project project = projectService.getOrTrow(projectId);
         boolean userInProject = collaboratorService.isUserInProject(authUser, project);
         if (!userInProject) {

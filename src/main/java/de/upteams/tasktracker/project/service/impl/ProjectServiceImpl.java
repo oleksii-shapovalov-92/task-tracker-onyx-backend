@@ -1,5 +1,6 @@
 package de.upteams.tasktracker.project.service.impl;
 
+import de.upteams.tasktracker.exception.handling.exceptions.common.RestApiException;
 import de.upteams.tasktracker.project.dto.request.ProjectCreateDto;
 import de.upteams.tasktracker.project.dto.response.ProjectResponseDto;
 import de.upteams.tasktracker.project.entity.Project;
@@ -9,6 +10,7 @@ import de.upteams.tasktracker.project.service.interfaces.ProjectService;
 import de.upteams.tasktracker.project.utils.ProjectMapper;
 import de.upteams.tasktracker.user.entity.AppUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,10 +40,19 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public Project getOrTrow(String id) {
+        final UUID projectId;
+
+        try {
+            projectId = UUID.fromString(id);
+        } catch (IllegalArgumentException ex) {
+            throw new RestApiException(HttpStatus.BAD_REQUEST, "Invalid projectId format");
+        }
+
         return repository
-                .findById(UUID.fromString(id))
+                .findById(projectId)
                 .orElseThrow(ProjectNotFoundException::new);
     }
+
 
     @Override
     public List<ProjectResponseDto> getAll() {
@@ -54,7 +65,14 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void delete(String id) {
-        Project existedProject = getOrTrow(id);
-        repository.delete(existedProject);
+        final UUID projectId;
+
+        try {
+            projectId = UUID.fromString(id);
+        } catch (IllegalArgumentException ex) {
+            throw new RestApiException(HttpStatus.BAD_REQUEST, "Invalid projectId format");
+        }
+
+        repository.deleteById(projectId);
     }
 }

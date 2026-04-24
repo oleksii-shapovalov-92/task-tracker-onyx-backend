@@ -81,6 +81,19 @@ public interface ProjectApi {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ProjectResponseDto.class)))
             ,
+            @ApiResponse(responseCode = "400", description = "Invalid project ID format",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "timestamp": "2025-04-26T10:00:00",
+                                      "status": 400,
+                                      "error": "Bad Request",
+                                      "message": "Invalid projectId format",
+                                      "path": "/api/v1/projects/invalid-id"
+                                    }
+                                    """)))
+            ,
             @ApiResponse(responseCode = "404", description = "Project not found",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class),
@@ -113,6 +126,19 @@ public interface ProjectApi {
     @Operation(summary = "Delete Project", description = "Delete Project from the Database by its ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Project successfully deleted"),
+            @ApiResponse(responseCode = "400", description = "Invalid project ID format",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "timestamp": "2025-04-26T10:00:00",
+                                      "status": 400,
+                                      "error": "Bad Request",
+                                      "message": "Invalid projectId format",
+                                      "path": "/api/v1/projects/invalid-id"
+                                    }
+                                    """)))
+            ,
             @ApiResponse(responseCode = "404", description = "Project not found",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class),
@@ -126,6 +152,7 @@ public interface ProjectApi {
                                     }
                                     """)))
     })
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
     void deleteById(
             @PathVariable
