@@ -18,8 +18,8 @@ import org.mapstruct.MappingConstants;
 )
 public interface TaskMappingService {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "project.owner", ignore = true)
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "project", source = "project")
     @Mapping(target = "executors", ignore = true)
     TaskResponseDto mapEntityToDto(Task entity);
 

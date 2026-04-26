@@ -23,7 +23,7 @@ public class CollaboratorServiceImpl implements CollaboratorService {
 
     @Override
     public boolean isUserInProject(AppUser user, Project project) {
-        return getCollaborator(user, project).isPresent();
+        return isProjectOwner(user, project) || getCollaborator(user, project).isPresent();
     }
 
     @Override
@@ -38,6 +38,10 @@ public class CollaboratorServiceImpl implements CollaboratorService {
 
     @Override
     public boolean hasUserPermission(AppUser user, Project project, Collection<ProjectRoles> requiredRoles) {
+        if (isProjectOwner(user, project)) {
+            return true;
+        }
+
         return getCollaborator(user, project)
                 .map(collaborator -> hasAnyRequiredRole(collaborator, requiredRoles))
                 .orElse(false);
@@ -49,4 +53,11 @@ public class CollaboratorServiceImpl implements CollaboratorService {
                 .anyMatch(requiredRoles::contains);
     }
 
+    private boolean isProjectOwner(AppUser user, Project project) {
+        return user != null
+                && project != null
+                && project.getOwner() != null
+                && user.getId() != null
+                && user.getId().equals(project.getOwner().getId());
+    }
 }
