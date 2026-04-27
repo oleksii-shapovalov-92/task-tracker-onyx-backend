@@ -73,6 +73,10 @@ public class ProjectServiceImpl implements ProjectService {
             throw new RestApiException(HttpStatus.BAD_REQUEST, "Invalid projectId format");
         }
 
+        if (!repository.existsById(projectId)) {
+            throw new ProjectNotFoundException();
+        }
+
         repository.deleteById(projectId);
     }
 }
