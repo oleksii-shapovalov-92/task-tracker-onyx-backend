@@ -46,6 +46,7 @@ digitalocean:
     endpoint: ${DO_SPACES_ENDPOINT}
     region: ${DO_SPACES_REGION}
     bucket-name: ${DO_SPACES_BUCKET}
+    public-base-url: ${DO_SPACES_PUBLIC_BASE_URL}
 
 jwt:
   at:

@@ -57,6 +57,7 @@ digitalocean:
     endpoint: ${DO_SPACES_ENDPOINT:https://fra1.digitaloceanspaces.com}
     region: ${DO_SPACES_REGION:fra1}
     bucket-name: ${DO_SPACES_BUCKET:test-bucket}
+    public-base-url: ${DO_SPACES_PUBLIC_BASE_URL:https://test-bucket.fra1.digitaloceanspaces.com}
 
 
 #1 day = 1440min

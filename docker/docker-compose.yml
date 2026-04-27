@@ -5,7 +5,7 @@ services:
     image: mysql:8.0.36
     container_name: mysql-local
     environment:
-      MYSQL_ROOT_PASSWORD: WTF_is That???
+      MYSQL_ROOT_PASSWORD:
       MYSQL_DATABASE: mydb
       MYSQL_USER: admin
       MYSQL_PASSWORD: myadmin

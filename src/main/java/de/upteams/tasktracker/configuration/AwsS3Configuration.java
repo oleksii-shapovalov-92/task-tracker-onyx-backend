@@ -17,4 +17,5 @@ public class AwsS3Configuration {
     String endpoint;
     String region;
     String bucketName;
+    String publicBaseUrl;
 }

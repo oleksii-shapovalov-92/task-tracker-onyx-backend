@@ -16,6 +16,9 @@ import org.hibernate.validator.constraints.URL;
 
 import static de.upteams.tasktracker.user.constants.UserValidationConstants.PASSWORD_REGEX;
 
+import de.upteams.tasktracker.user.constants.UserValidationConstants;
+
+
 /**
  * Application User entity
  */
@@ -56,31 +59,36 @@ public class AppUser extends BaseEntity {
     private Role role = Role.ROLE_USER;
 
 
-    @Size(max = 100, message = "{user.displayName.size}")
+    @Size(max = UserValidationConstants.DISPLAY_NAME_MAX_LENGTH,
+            message = "{user.displayName.size}")
     @Column(
             name = "display_name",
             nullable = false)
     private String displayName = "";
 
-    @Size(max = 100, message = "{user.position.size}")
+    @Size(max = UserValidationConstants.POSITION_MAX_LENGTH,
+            message = "{user.position.size}")
     @Column(
             name = "position",
             nullable = false)
     private String position = "";
 
-    @Size(max = 100, message = "{user.department.size}")
+    @Size(max = UserValidationConstants.DEPARTMENT_MAX_LENGTH,
+            message = "{user.department.size}")
     @Column(
             name = "department",
             nullable = false)
     private String department = "";
 
 
-    @Size(max = 2048, message = "{user.avatarUrl.size}")
+    @Size(max = UserValidationConstants.AVATAR_URL_MAX_LENGTH,
+            message = "{user.avatarUrl.size}")
     @URL(message = "{user.avatarUrl.invalid}")
     @Column(name = "avatar_url")
     private String avatarUrl;
 
-    @Size(max = 1000, message = "{user.bio.size}")
+    @Size(max = UserValidationConstants.BIO_MAX_LENGTH,
+            message = "{user.bio.size}")
     @Column(
             name = "bio",
             nullable = false)
