@@ -7,6 +7,9 @@ public final class ProjectValidationConstats {
     }
 
     public static final String NAME_REGEX = "^[A-Z][a-zA-Z0-9 ]*$";
+    public static final String DESCRIPTION_REGEX = "^[A-Z][a-zA-Z1-9,.%:?&!$;*() ]*$";
     public static final int NAME_MAX_LENGTH = 155;
     public static final int NAME_MIN_LENGTH = 3;
+    public static final int DESCRIPTION_MAX_LENGTH = 155;
+    public static final int DESCRIPTION_MIN_LENGTH = 3;
 }
