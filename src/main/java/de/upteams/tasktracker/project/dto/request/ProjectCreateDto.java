@@ -4,7 +4,7 @@ import de.upteams.tasktracker.project.constants.ProjectValidationConstats;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import org.hibernate.validator.constraints.Length;
+import jakarta.validation.constraints.Size;
 
 /**
  * Project DTO
@@ -16,30 +16,30 @@ public record ProjectCreateDto(
                 example = "New Website Development"
         )
         @NotBlank(message = "Project title is required")
-        @Length(
-                min = ProjectValidationConstats.NAME_MIN_LENGTH,
-                max = ProjectValidationConstats.NAME_MAX_LENGTH,
-                message = "Project title must be between 3 and 155 characters long"
+        @Size(
+                min = ProjectValidationConstats.TITLE_MIN_LENGTH,
+                max = ProjectValidationConstats.TITLE_MAX_LENGTH,
+                message = "Project title must be between 3 and 100 characters long"
         )
         @Pattern(
-                regexp = ProjectValidationConstats.NAME_REGEX,
-                message = "Project title must start with a capital letter and may contain only letters, digits and spaces"
+                regexp = ProjectValidationConstats.TITLE_REGEX,
+                message = "Project title must start with an uppercase letter and may contain only letters, digits, spaces, dots, ampersands, apostrophes, parentheses and hyphens"
         )
         String title,
 
         @Schema(
                 description = "Detailed description of the Project",
-                example = "A Project to develop a new company website"
+                example = "A project to develop a new company website."
         )
         @NotBlank(message = "Project description is required")
-        @Length(
+        @Size(
                 min = ProjectValidationConstats.DESCRIPTION_MIN_LENGTH,
                 max = ProjectValidationConstats.DESCRIPTION_MAX_LENGTH,
-                message = "Project description must be between 3 and 155 characters long"
+                message = "Project description must be between 10 and 500 characters long"
         )
         @Pattern(
                 regexp = ProjectValidationConstats.DESCRIPTION_REGEX,
-                message = "Project description must start with a capital letter and may contain only letters, digits, spaces, and , . % : ? & ! $ ; * ( )"
+                message = "Project description must start with an uppercase letter or digit and may contain only letters, digits, spaces and common punctuation"
         )
         String description) {
 

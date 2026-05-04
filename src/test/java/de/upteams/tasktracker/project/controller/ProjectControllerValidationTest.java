@@ -40,14 +40,18 @@ class ProjectControllerValidationTest {
 
     @ParameterizedTest
     @CsvSource({
-            "'', 'Valid Description', title",
-            "'   ', 'Valid Description', title",
-            "'Valid Title', '', description",
-            "'Valid Title', '   ', description"
+            "'', 'Valid project description.', title, Project title is required",
+            "'   ', 'Valid project description.', title, Project title is required",
+            "'Valid Title', '', description, Project description is required",
+            "'Valid Title', '   ', description, Project description is required"
     })
     @DisplayName("Should return 400 Bad Request for blank required project fields")
-    void shouldReturn400ForBlankRequiredProjectFields(String title, String description, String invalidField)
-            throws Exception {
+    void shouldReturn400ForBlankRequiredProjectFields(
+            String title,
+            String description,
+            String invalidField,
+            String expectedMessage
+    ) throws Exception {
         String requestBody = """
                 {
                   "title": "%s",
@@ -63,21 +67,17 @@ class ProjectControllerValidationTest {
                 .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("Validation failed for one or more fields"))
                 .andExpect(jsonPath("$.errors[0].field").value(invalidField))
-                .andExpect(jsonPath("$.errors[0].messages", hasItem(
-                        invalidField.equals("title")
-                                ? "Project title is required"
-                                : "Project description is required"
-                )));
+                .andExpect(jsonPath("$.errors[0].messages", hasItem(expectedMessage)));
 
         verifyNoInteractions(projectService);
     }
 
     @ParameterizedTest
     @CsvSource({
-            "'Ab', 'Valid Description', title, Project title must be between 3 and 155 characters long",
-            "'%s', 'Valid Description', title, Project title must be between 3 and 155 characters long",
-            "'Valid Title', 'Ab', description, Project description must be between 3 and 155 characters long",
-            "'Valid Title', '%s', description, Project description must be between 3 and 155 characters long"
+            "'Ab', 'Valid project description.', title, Project title must be between 3 and 100 characters long",
+            "'%s', 'Valid project description.', title, Project title must be between 3 and 100 characters long",
+            "'Valid Title', 'Short', description, Project description must be between 10 and 500 characters long",
+            "'Valid Title', '%s', description, Project description must be between 10 and 500 characters long"
     })
     @DisplayName("Should return 400 Bad Request for invalid project field length")
     void shouldReturn400ForInvalidProjectFieldLength(
@@ -86,8 +86,8 @@ class ProjectControllerValidationTest {
             String invalidField,
             String expectedMessage
     ) throws Exception {
-        String title = "%s".equals(rawTitle) ? "A".repeat(156) : rawTitle;
-        String description = "%s".equals(rawDescription) ? "A".repeat(156) : rawDescription;
+        String title = "%s".equals(rawTitle) ? "A".repeat(101) : rawTitle;
+        String description = "%s".equals(rawDescription) ? "A".repeat(501) : rawDescription;
 
         String requestBody = """
                 {
@@ -112,8 +112,10 @@ class ProjectControllerValidationTest {
     @ParameterizedTest
     @CsvSource(
             value = {
-                    "invalid title|Valid Description|title|Project title must start with a capital letter and may contain only letters, digits and spaces",
-                    "Valid Title|invalid description|description|Project description must start with a capital letter and may contain only letters, digits, spaces, and , . % : ? & ! $ ; * ( )"
+                    "invalid title|Valid project description.|title|Project title must start with an uppercase letter and may contain only letters, digits, spaces, dots, ampersands, apostrophes, parentheses and hyphens",
+                    "Invalid@Title|Valid project description.|title|Project title must start with an uppercase letter and may contain only letters, digits, spaces, dots, ampersands, apostrophes, parentheses and hyphens",
+                    "Valid Title|invalid description.|description|Project description must start with an uppercase letter or digit and may contain only letters, digits, spaces and common punctuation",
+                    "Valid Title|Valid description @@@|description|Project description must start with an uppercase letter or digit and may contain only letters, digits, spaces and common punctuation"
             },
             delimiter = '|'
     )

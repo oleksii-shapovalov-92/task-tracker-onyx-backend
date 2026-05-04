@@ -15,8 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,6 +27,17 @@ import java.util.stream.Collectors;
 @Hidden
 @Slf4j
 public class GlobalExceptionHandler {
+
+    private static final Map<String, Integer> VALIDATION_ERROR_PRIORITY = Map.of(
+            "NotBlank", 1,
+            "NotNull", 1,
+            "NotEmpty", 1,
+            "Size", 2,
+            "Length", 2,
+            "Min", 2,
+            "Max", 2,
+            "Pattern", 3
+    );
 
     @ExceptionHandler(RestApiException.class)
     public ResponseEntity<ErrorResponseDto> handleRestApiException(
@@ -51,14 +61,21 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException ex,
             HttpServletRequest request
     ) {
-        Map<String, List<String>> fieldErrorsMap = new HashMap<>();
-        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
-            fieldErrorsMap.computeIfAbsent(fieldError.getField(), key -> new ArrayList<>())
-                    .add(fieldError.getDefaultMessage());
-        }
+        Map<String, FieldError> fieldErrorsMap = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        fieldError -> fieldError,
+                        this::selectHigherPriorityFieldError
+                ));
 
-        List<ValidationErrorDto> validationErrors = fieldErrorsMap.entrySet().stream()
-                .map(entry -> new ValidationErrorDto(entry.getKey(), entry.getValue()))
+        List<ValidationErrorDto> validationErrors = fieldErrorsMap.entrySet()
+                .stream()
+                .map(entry -> new ValidationErrorDto(
+                        entry.getKey(),
+                        List.of(entry.getValue().getDefaultMessage())
+                ))
                 .collect(Collectors.toList());
 
         ErrorResponseDto errorResponse = new ErrorResponseDto(
@@ -70,6 +87,24 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    private FieldError selectHigherPriorityFieldError(
+            FieldError firstError,
+            FieldError secondError
+    ) {
+        return Comparator
+                .comparingInt(this::getValidationErrorPriority)
+                .compare(firstError, secondError) <= 0
+                ? firstError
+                : secondError;
+    }
+
+    private int getValidationErrorPriority(FieldError fieldError) {
+        return VALIDATION_ERROR_PRIORITY.getOrDefault(
+                fieldError.getCode(),
+                Integer.MAX_VALUE
+        );
     }
 
 //    *

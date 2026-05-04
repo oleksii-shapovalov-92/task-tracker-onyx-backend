@@ -6,10 +6,14 @@ public final class ProjectValidationConstats {
         throw new IllegalStateException("Utility class");
     }
 
-    public static final String NAME_REGEX = "^[A-Z][a-zA-Z0-9 ]*$";
-    public static final String DESCRIPTION_REGEX = "^[A-Z][a-zA-Z1-9,.%:?&!$;*() ]*$";
-    public static final int NAME_MAX_LENGTH = 155;
-    public static final int NAME_MIN_LENGTH = 3;
-    public static final int DESCRIPTION_MAX_LENGTH = 155;
-    public static final int DESCRIPTION_MIN_LENGTH = 3;
+    public static final String TITLE_REGEX = "^[A-Z][A-Za-z0-9 .&'()\\-]*[A-Za-z0-9)]$";
+
+    public static final String DESCRIPTION_REGEX =
+            "^[A-Z0-9][A-Za-z0-9\\s.,:;!?%&$'\"()\\-]*[A-Za-z0-9.!?)]$";
+
+    public static final int TITLE_MIN_LENGTH = 3;
+    public static final int TITLE_MAX_LENGTH = 100;
+
+    public static final int DESCRIPTION_MIN_LENGTH = 10;
+    public static final int DESCRIPTION_MAX_LENGTH = 500;
 }
