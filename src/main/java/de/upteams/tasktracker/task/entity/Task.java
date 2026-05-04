@@ -42,6 +42,12 @@ public class Task extends BaseEntity {
     )
     private String description;
 
+    // ✅ ВОТ ОНО — статус
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private TaskStatus status = TaskStatus.TODO;
+
     @NotNull
     @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
@@ -72,6 +78,7 @@ public class Task extends BaseEntity {
                 "id=" + id +
                 ", executorsIds=" + getIdsForToString(executors) +
                 ", projectId=" + getIdForToString(project) +
+                ", status=" + status +
                 ", description='" + description + '\'' +
                 ", title='" + title + '\'' +
                 '}';

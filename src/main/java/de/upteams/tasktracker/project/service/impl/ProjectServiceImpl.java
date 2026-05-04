@@ -1,5 +1,7 @@
 package de.upteams.tasktracker.project.service.impl;
 
+import de.upteams.tasktracker.collaborator.entity.ProjectRoles;
+import de.upteams.tasktracker.collaborator.service.interfaces.CollaboratorService;
 import de.upteams.tasktracker.exception.handling.exceptions.common.RestApiException;
 import de.upteams.tasktracker.project.dto.request.ProjectCreateDto;
 import de.upteams.tasktracker.project.dto.response.ProjectResponseDto;
@@ -25,12 +27,18 @@ public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository repository;
     private final ProjectMapper mappingService;
+    private final CollaboratorService collaboratorService;
 
     @Override
     public ProjectResponseDto save(ProjectCreateDto newProjectDto, AppUser projectOwner) {
         Project project = mappingService.mapDtoToEntity(newProjectDto);
         project.setOwner(projectOwner);
-        return mappingService.mapEntityToDto(repository.save(project));
+
+        Project savedProject = repository.save(project);
+
+        collaboratorService.save(projectOwner, savedProject, List.of(ProjectRoles.OWNER));
+
+        return mappingService.mapEntityToDto(savedProject);
     }
 
     @Override
@@ -52,7 +60,6 @@ public class ProjectServiceImpl implements ProjectService {
                 .findById(projectId)
                 .orElseThrow(ProjectNotFoundException::new);
     }
-
 
     @Override
     public List<ProjectResponseDto> getAll() {

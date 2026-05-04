@@ -52,6 +52,15 @@ public class CollaboratorServiceImpl implements CollaboratorService {
                 .stream()
                 .anyMatch(requiredRoles::contains);
     }
+    @Override
+    public Collaborator save(AppUser user, Project project, Collection<ProjectRoles> roles) {
+        Collaborator collaborator = new Collaborator();
+        collaborator.setAppUser(user);
+        collaborator.setProject(project);
+        collaborator.getProjectRolesSet().addAll(roles);
+
+        return collaboratorRepository.save(collaborator);
+    }
 
     private boolean isProjectOwner(AppUser user, Project project) {
         return user != null

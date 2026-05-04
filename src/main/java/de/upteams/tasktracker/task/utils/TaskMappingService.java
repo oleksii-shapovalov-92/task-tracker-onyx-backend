@@ -21,6 +21,7 @@ public interface TaskMappingService {
     @Mapping(target = "id", source = "id")
     @Mapping(target = "project", source = "project")
     @Mapping(target = "executors", ignore = true)
+    @Mapping(target = "status", source = "status")
     TaskResponseDto mapEntityToDto(Task entity);
 
     @Mapping(target = "project", ignore = true)

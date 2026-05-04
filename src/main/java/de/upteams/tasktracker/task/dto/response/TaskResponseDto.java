@@ -1,6 +1,7 @@
 package de.upteams.tasktracker.task.dto.response;
 
 import de.upteams.tasktracker.project.dto.response.ProjectResponseDto;
+import de.upteams.tasktracker.task.entity.TaskStatus;
 import de.upteams.tasktracker.user.dto.EmployeeDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Value;
@@ -11,6 +12,7 @@ import java.util.Set;
 @Schema(description = "Data Transfer Object for Task entity")
 @Value
 public class TaskResponseDto {
+
     @Schema(
             description = "Unique identifier of the Task",
             example = "5",
@@ -20,7 +22,8 @@ public class TaskResponseDto {
 
     @Schema(
             description = "Title of the Task",
-            example = "Implement repository layer")
+            example = "Implement repository layer"
+    )
     String title;
 
     @Schema(
@@ -30,7 +33,13 @@ public class TaskResponseDto {
     String description;
 
     @Schema(
-            description = "The Project whit which this Task is associated",
+            description = "Status of the Task",
+            example = "TODO"
+    )
+    TaskStatus status;
+
+    @Schema(
+            description = "The Project with which this Task is associated",
             accessMode = Schema.AccessMode.READ_ONLY
     )
     ProjectResponseDto project;

@@ -14,6 +14,8 @@ public interface CollaboratorService {
 
     Optional<Collaborator> getCollaborator(AppUser user, Project project);
 
+    Collaborator save(AppUser user, Project project, Collection<ProjectRoles> roles);
+
     boolean hasUserPermission(AppUser user, Project project, ProjectRoles requiredRole);
 
     boolean hasUserPermission(AppUser user, Project project, Collection<ProjectRoles> requiredRoles);

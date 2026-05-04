@@ -1,5 +1,7 @@
 package de.upteams.tasktracker.task.service.impl;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import de.upteams.tasktracker.collaborator.entity.ProjectRoles;
 import de.upteams.tasktracker.collaborator.service.interfaces.CollaboratorService;
 import de.upteams.tasktracker.exception.handling.exceptions.common.RestApiException;
@@ -26,6 +28,7 @@ import java.util.UUID;
  */
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository repository;
