@@ -15,6 +15,7 @@ import de.upteams.tasktracker.task.persistence.TaskRepository;
 import de.upteams.tasktracker.task.service.interfaces.TaskService;
 import de.upteams.tasktracker.task.utils.TaskMappingService;
 import de.upteams.tasktracker.user.entity.AppUser;
+import de.upteams.tasktracker.task.entity.TaskStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -100,6 +101,29 @@ public class TaskServiceImpl implements TaskService {
             throw new RestApiException(HttpStatus.FORBIDDEN, "User has no access to this project");
         }
         repository.delete(existedTask);
+    }
+
+    @Override
+    public TaskResponseDto updateStatus(
+            final String id,
+            final TaskStatus status,
+            final AppUser changer
+    ) {
+        final Task existedTask = getOrThrow(id);
+
+        final boolean hasPermission = collaboratorService.hasUserPermission(
+                changer,
+                existedTask.getProject(),
+                List.of(ProjectRoles.MEMBER, ProjectRoles.OWNER, ProjectRoles.ADMIN)
+        );
+
+        if (!hasPermission) {
+            throw new RestApiException(HttpStatus.FORBIDDEN, "User has no access to this project");
+        }
+
+        existedTask.setStatus(status);
+
+        return mappingService.mapEntityToDto(repository.save(existedTask));
     }
 
 }
