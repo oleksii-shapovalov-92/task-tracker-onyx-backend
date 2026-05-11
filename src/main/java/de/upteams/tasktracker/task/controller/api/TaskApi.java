@@ -5,6 +5,7 @@ import de.upteams.tasktracker.exception.handling.response.ValidationErrorDto;
 import de.upteams.tasktracker.security.service.AuthUserDetails;
 import de.upteams.tasktracker.task.dto.request.TaskCreateDto;
 import de.upteams.tasktracker.task.dto.request.TaskStatusUpdateDto;
+import de.upteams.tasktracker.task.dto.request.TaskUpdateDto;
 import de.upteams.tasktracker.task.dto.response.TaskResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -256,6 +257,39 @@ public interface TaskApi {
             @RequestBody
             @Valid
             TaskStatusUpdateDto request,
+
+            @AuthenticationPrincipal
+            @Parameter(hidden = true)
+            AuthUserDetails principal
+    );
+
+    @Operation(summary = "Update Task", description = "Updates title and description of an existing task")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Task successfully updated",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TaskResponseDto.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Invalid task payload or invalid task ID format",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDto.class))
+            ),
+            @ApiResponse(responseCode = "403", description = "Forbidden - user has no access to the project",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDto.class))
+            ),
+            @ApiResponse(responseCode = "404", description = "Task not found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDto.class))
+            )
+    })
+    @PatchMapping("/{id}")
+    TaskResponseDto update(
+            @PathVariable
+            String id,
+
+            @RequestBody
+            @Valid
+            TaskUpdateDto request,
 
             @AuthenticationPrincipal
             @Parameter(hidden = true)

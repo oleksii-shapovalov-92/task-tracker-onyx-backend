@@ -5,6 +5,7 @@ import de.upteams.tasktracker.task.dto.response.TaskResponseDto;
 import de.upteams.tasktracker.task.entity.Task;
 import de.upteams.tasktracker.user.entity.AppUser;
 import de.upteams.tasktracker.task.entity.TaskStatus;
+import de.upteams.tasktracker.task.dto.request.TaskUpdateDto;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,4 +28,6 @@ public interface TaskService {
     void delete(String id, AppUser changer);
 
     TaskResponseDto updateStatus(String id, TaskStatus status, AppUser changer);
+
+    TaskResponseDto update(String id, TaskUpdateDto request, AppUser changer);
 }

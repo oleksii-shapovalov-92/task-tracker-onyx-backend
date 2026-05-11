@@ -1,5 +1,6 @@
 package de.upteams.tasktracker.task.service.impl;
 
+import de.upteams.tasktracker.task.dto.request.TaskUpdateDto;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.upteams.tasktracker.collaborator.entity.ProjectRoles;
@@ -122,6 +123,30 @@ public class TaskServiceImpl implements TaskService {
         }
 
         existedTask.setStatus(status);
+
+        return mappingService.mapEntityToDto(repository.save(existedTask));
+    }
+
+    @Override
+    public TaskResponseDto update(
+            final String id,
+            final TaskUpdateDto request,
+            final AppUser changer
+    ) {
+        final Task existedTask = getOrThrow(id);
+
+        final boolean hasPermission = collaboratorService.hasUserPermission(
+                changer,
+                existedTask.getProject(),
+                List.of(ProjectRoles.MEMBER, ProjectRoles.OWNER, ProjectRoles.ADMIN)
+        );
+
+        if (!hasPermission) {
+            throw new RestApiException(HttpStatus.FORBIDDEN, "User has no access to this project");
+        }
+
+        existedTask.setTitle(request.title());
+        existedTask.setDescription(request.description());
 
         return mappingService.mapEntityToDto(repository.save(existedTask));
     }

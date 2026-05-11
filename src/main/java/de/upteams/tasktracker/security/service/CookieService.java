@@ -13,7 +13,7 @@ public class CookieService {
     @Value("${jwt.rt.live-in-min}")
     private int refreshTokenLiveInMinutes;
 
-    @Value("${app.cookie.secure:true}")
+    @Value("${cookie.secure:true}")
     public boolean cookieSecure;
 
     public Cookie generateLogoutCookie(final String cookieName) {
