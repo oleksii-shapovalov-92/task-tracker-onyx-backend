@@ -13,6 +13,7 @@ import de.upteams.tasktracker.user.entity.AppUser;
 import de.upteams.tasktracker.task.dto.response.TaskResponseDto;
 import de.upteams.tasktracker.task.entity.TaskStatus;
 import de.upteams.tasktracker.task.exception.TaskNotFoundException;
+import de.upteams.tasktracker.task.dto.request.TaskUpdateDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -216,6 +217,123 @@ class TaskServiceImplTest {
                 TaskStatus.IN_PROGRESS,
                 user
         ))
+                .isInstanceOfSatisfying(RestApiException.class, ex -> {
+                    assertThat(ex.getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(ex.getMessage()).isEqualTo("Invalid taskId format");
+                });
+
+        verifyNoInteractions(repository);
+        verifyNoInteractions(collaboratorService);
+        verifyNoInteractions(mappingService);
+    }
+
+    @Test
+    @DisplayName("Should update task title and description when user has access to project")
+    void shouldUpdateTaskTitleAndDescriptionWhenUserHasAccessToProject() {
+        AppUser user = new AppUser();
+        setField(user, "id", UUID.randomUUID());
+
+        Project project = new Project();
+        setField(project, "id", UUID.randomUUID());
+
+        Task task = new Task("Old title", "Old description", project);
+        UUID taskId = UUID.randomUUID();
+        setField(task, "id", taskId);
+
+        TaskResponseDto responseDto = mock(TaskResponseDto.class);
+        TaskUpdateDto request = new TaskUpdateDto("Updated task title", "Updated task description");
+
+        when(repository.findById(taskId)).thenReturn(Optional.of(task));
+        when(collaboratorService.hasUserPermission(
+                eq(user),
+                eq(project),
+                eq(List.of(ProjectRoles.MEMBER, ProjectRoles.OWNER, ProjectRoles.ADMIN))
+        )).thenReturn(true);
+        when(repository.save(task)).thenReturn(task);
+        when(mappingService.mapEntityToDto(task)).thenReturn(responseDto);
+
+        TaskResponseDto result = taskService.update(taskId.toString(), request, user);
+
+        assertThat(task.getTitle()).isEqualTo("Updated task title");
+        assertThat(task.getDescription()).isEqualTo("Updated task description");
+        assertThat(result).isSameAs(responseDto);
+
+        verify(repository).findById(taskId);
+        verify(collaboratorService).hasUserPermission(
+                user,
+                project,
+                List.of(ProjectRoles.MEMBER, ProjectRoles.OWNER, ProjectRoles.ADMIN)
+        );
+        verify(repository).save(task);
+        verify(mappingService).mapEntityToDto(task);
+    }
+
+    @Test
+    @DisplayName("Should throw forbidden when user has no access to project during task update")
+    void shouldThrowForbiddenWhenUserHasNoAccessToProjectDuringTaskUpdate() {
+        AppUser user = new AppUser();
+        setField(user, "id", UUID.randomUUID());
+
+        Project project = new Project();
+        setField(project, "id", UUID.randomUUID());
+
+        Task task = new Task("Old title", "Old description", project);
+        UUID taskId = UUID.randomUUID();
+        setField(task, "id", taskId);
+
+        TaskUpdateDto request = new TaskUpdateDto("Updated task title", "Updated task description");
+
+        when(repository.findById(taskId)).thenReturn(Optional.of(task));
+        when(collaboratorService.hasUserPermission(
+                eq(user),
+                eq(project),
+                eq(List.of(ProjectRoles.MEMBER, ProjectRoles.OWNER, ProjectRoles.ADMIN))
+        )).thenReturn(false);
+
+        assertThatThrownBy(() -> taskService.update(taskId.toString(), request, user))
+                .isInstanceOfSatisfying(RestApiException.class, ex -> {
+                    assertThat(ex.getHttpStatus()).isEqualTo(HttpStatus.FORBIDDEN);
+                    assertThat(ex.getMessage()).isEqualTo("User has no access to this project");
+                });
+
+        assertThat(task.getTitle()).isEqualTo("Old title");
+        assertThat(task.getDescription()).isEqualTo("Old description");
+
+        verify(repository).findById(taskId);
+        verify(collaboratorService).hasUserPermission(
+                user,
+                project,
+                List.of(ProjectRoles.MEMBER, ProjectRoles.OWNER, ProjectRoles.ADMIN)
+        );
+        verify(repository, never()).save(any());
+        verifyNoInteractions(mappingService);
+    }
+
+    @Test
+    @DisplayName("Should throw not found when updating non-existing task")
+    void shouldThrowNotFoundWhenUpdatingNonExistingTask() {
+        AppUser user = new AppUser();
+        UUID taskId = UUID.randomUUID();
+        TaskUpdateDto request = new TaskUpdateDto("Updated task title", "Updated task description");
+
+        when(repository.findById(taskId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> taskService.update(taskId.toString(), request, user))
+                .isInstanceOf(TaskNotFoundException.class);
+
+        verify(repository).findById(taskId);
+        verifyNoInteractions(collaboratorService);
+        verify(repository, never()).save(any());
+        verifyNoInteractions(mappingService);
+    }
+
+    @Test
+    @DisplayName("Should throw bad request when task id format is invalid during task update")
+    void shouldThrowBadRequestWhenTaskIdFormatIsInvalidDuringTaskUpdate() {
+        AppUser user = new AppUser();
+        TaskUpdateDto request = new TaskUpdateDto("Updated task title", "Updated task description");
+
+        assertThatThrownBy(() -> taskService.update("invalid-id", request, user))
                 .isInstanceOfSatisfying(RestApiException.class, ex -> {
                     assertThat(ex.getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
                     assertThat(ex.getMessage()).isEqualTo("Invalid taskId format");

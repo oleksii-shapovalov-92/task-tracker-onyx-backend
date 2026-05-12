@@ -60,14 +60,14 @@ digitalocean:
     public-base-url: ${DO_SPACES_PUBLIC_BASE_URL:https://test-bucket.fra1.digitaloceanspaces.com}
 
 
-#1 day = 1440min
-#7 day = 10080min
+# 2 hours = 120 min
+# 7 days = 10080 min
 jwt:
   at:
-    live-in-min: ${JWT_AT_LIVE_IN_MIN:10}
+    live-in-min: ${JWT_AT_LIVE_IN_MIN:120}
     secret: ${JWT_AT_SECRET:eW91ci0yNTYtYml0LXNlY3JldC1mb3ItYWNjZXNzLXRva2VuLTAxMjM0NTY3ODlhYmNkZWY=}
   rt:
-    live-in-min: ${JWT_RT_LIVE_IN_MIN:1440}
+    live-in-min: ${JWT_RT_LIVE_IN_MIN:10080}
     secret: ${JWT_RT_SECRET:eW91ci0yNTYtYml0LXNlY3JldC1mb3ItcmVmcmVzaC10b2tlbi1hYmNkZWYwMTIzNDU2Nzg5}
 
 springdoc:

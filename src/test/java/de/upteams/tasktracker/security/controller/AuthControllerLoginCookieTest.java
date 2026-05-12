@@ -27,9 +27,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @Import(CookieService.class)
 @TestPropertySource(properties = {
-        "jwt.at.live-in-min=10",
-        "jwt.rt.live-in-min=1440",
-        "app.cookie.secure=false"
+        "jwt.at.live-in-min=120",
+        "jwt.rt.live-in-min=10080",
+        "cookie.secure=false"
 })
 class AuthControllerLoginCookieTest {
 
@@ -63,6 +63,8 @@ class AuthControllerLoginCookieTest {
                 .andExpect(cookie().exists(ACCESS_TOKEN_COOKIE))
                 .andExpect(cookie().exists(REFRESH_TOKEN_COOKIE))
                 .andExpect(cookie().secure(ACCESS_TOKEN_COOKIE, false))
-                .andExpect(cookie().secure(REFRESH_TOKEN_COOKIE, false));
+                .andExpect(cookie().secure(REFRESH_TOKEN_COOKIE, false))
+                .andExpect(cookie().maxAge(ACCESS_TOKEN_COOKIE, 120 * 60))
+                .andExpect(cookie().maxAge(REFRESH_TOKEN_COOKIE, 10080 * 60));
     }
 }
