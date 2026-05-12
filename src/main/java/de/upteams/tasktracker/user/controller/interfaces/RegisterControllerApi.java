@@ -1,11 +1,10 @@
 package de.upteams.tasktracker.user.controller.interfaces;
 
+import org.springframework.http.ResponseEntity;
 import de.upteams.tasktracker.exception.handling.response.ErrorResponseDto;
 import de.upteams.tasktracker.exception.handling.response.ValidationErrorDto;
 import de.upteams.tasktracker.user.dto.request.UserCreateDto;
-import de.upteams.tasktracker.user.dto.response.UserConfirmationResponseDto;
 import de.upteams.tasktracker.user.dto.response.UserCreateResponseDto;
-import de.upteams.tasktracker.user.dto.response.UserResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -70,34 +69,28 @@ public interface RegisterControllerApi {
 
     @Operation(summary = "Confirm user registration", description = "Confirms a user's registration using a confirmation code sent via email.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User confirmed successfully",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = UserResponseDto.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                      "email": "tes_dev@upteams.de",
-                                      "role": "ROLE_USER",
-                                      "confirmationStatus": "CONFIRMED"
-                                    }
-                                    """))
+            @ApiResponse(
+                    responseCode = "302",
+                    description = "User confirmed successfully and redirected to login page"
             ),
             @ApiResponse(responseCode = "404", description = "Confirmation code not found or expired",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class),
                             examples = @ExampleObject(value = """
-                                    {
-                                      "timestamp": 1627660173000,
-                                      "status": 404,
-                                      "error": "Not Found",
-                                      "message": "Confirmation code is invalid or expired",
-                                      "path": "/api/v1/users/confirm/abcdef123456"
-                                    }
-                                    """))
+                                {
+                                  "timestamp": 1627660173000,
+                                  "status": 404,
+                                  "error": "Not Found",
+                                  "message": "Confirmation code is invalid or expired",
+                                  "path": "/api/v1/users/confirm/abcdef123456"
+                                }
+                                """))
             )
     })
     @GetMapping("/confirm/{code}")
-    UserConfirmationResponseDto confirmRegistration(
+    ResponseEntity<Void> confirmRegistration(
             @PathVariable
             String code
     );
+
 }
