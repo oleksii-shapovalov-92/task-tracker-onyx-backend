@@ -9,9 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/**
- * REST Controller that receives http-requests for various operations with Projects
- */
 @RestController
 public class ProjectController implements ProjectApi {
 
@@ -37,7 +34,7 @@ public class ProjectController implements ProjectApi {
     }
 
     @Override
-    public void deleteById(String id) {
-        service.delete(id);
+    public void deleteById(String id, AuthUserDetails principal) {
+        service.delete(id, principal != null ? principal.user() : null);
     }
 }

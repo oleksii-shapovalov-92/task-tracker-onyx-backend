@@ -20,5 +20,5 @@ public interface ProjectService {
 
     List<ProjectResponseDto> getAll();
 
-    void delete(String id);
+    void delete(String id, AppUser authenticatedUser);
 }

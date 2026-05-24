@@ -157,6 +157,10 @@ public interface ProjectApi {
     void deleteById(
             @PathVariable
             @Parameter(required = true, description = "Project ID to delete")
-            String id
+            String id,
+
+            @AuthenticationPrincipal
+            @Parameter(hidden = true)
+            AuthUserDetails principal
     );
 }

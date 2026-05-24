@@ -18,9 +18,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Service for various operations with Projects
- */
 @Service
 @RequiredArgsConstructor
 public class ProjectServiceImpl implements ProjectService {
@@ -71,7 +68,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void delete(String id) {
+    public void delete(String id, AppUser authenticatedUser) {
         final UUID projectId;
 
         try {
@@ -80,10 +77,14 @@ public class ProjectServiceImpl implements ProjectService {
             throw new RestApiException(HttpStatus.BAD_REQUEST, "Invalid projectId format");
         }
 
-        if (!repository.existsById(projectId)) {
+        Project project = repository
+                .findById(projectId)
+                .orElseThrow(ProjectNotFoundException::new);
+
+        if (!project.getOwner().getId().equals(authenticatedUser.getId())) {
             throw new ProjectNotFoundException();
         }
 
-        repository.deleteById(projectId);
+        repository.delete(project);
     }
 }
