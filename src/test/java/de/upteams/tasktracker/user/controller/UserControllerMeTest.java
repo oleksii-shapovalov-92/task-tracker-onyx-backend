@@ -8,6 +8,9 @@ import de.upteams.tasktracker.user.dto.request.UserProfileUpdateDto;
 import de.upteams.tasktracker.user.dto.response.UserResponseDto;
 import de.upteams.tasktracker.user.entity.ConfirmationStatus;
 import de.upteams.tasktracker.user.service.UserService;
+import de.upteams.tasktracker.exception.handling.GlobalExceptionHandler;
+import de.upteams.tasktracker.exception.handling.exceptions.common.RestApiException;
+import de.upteams.tasktracker.user.dto.request.ChangePasswordRequestDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +20,14 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -28,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(UserControllerImpl.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 @DisplayName("UserController /me tests")
 class UserControllerMeTest {
 
@@ -226,5 +236,65 @@ class UserControllerMeTest {
                 .andExpect(jsonPath("$.email").value("risen.cumin.22@icloud.com"))
                 .andExpect(jsonPath("$.role").value("ROLE_USER"))
                 .andExpect(jsonPath("$.confirmationStatus").value("CONFIRMED"));
+    }
+
+    @Test
+    @DisplayName("Should change current user password")
+    void shouldChangeCurrentUserPassword() throws Exception {
+        ChangePasswordRequestDto request = new ChangePasswordRequestDto(
+                "OldPassword123!",
+                "NewPassword123!"
+        );
+
+        mockMvc.perform(patch("/api/v1/users/me/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNoContent());
+
+        verify(userService).changeCurrentUserPassword(any(ChangePasswordRequestDto.class));
+    }
+
+    @Test
+    @DisplayName("Should return bad request when current password is incorrect")
+    void shouldReturnBadRequestWhenCurrentPasswordIsIncorrect() throws Exception {
+        ChangePasswordRequestDto request = new ChangePasswordRequestDto(
+                "WrongPassword123!",
+                "NewPassword123!"
+        );
+
+        doThrow(new RestApiException(HttpStatus.BAD_REQUEST, "Current password is incorrect"))
+                .when(userService)
+                .changeCurrentUserPassword(any(ChangePasswordRequestDto.class));
+
+        mockMvc.perform(patch("/api/v1/users/me/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Current password is incorrect"))
+                .andExpect(jsonPath("$.path").value("/api/v1/users/me/password"));
+    }
+
+    @Test
+    @DisplayName("Should return bad request when new password is invalid")
+    void shouldReturnBadRequestWhenNewPasswordIsInvalid() throws Exception {
+        String requestBody = """
+                {
+                  "currentPassword": "OldPassword123!",
+                  "newPassword": "weak"
+                }
+                """;
+
+        mockMvc.perform(patch("/api/v1/users/me/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Validation failed for one or more fields"))
+                .andExpect(jsonPath("$.errors[0].field").value("newPassword"));
+
+        verifyNoInteractions(userService);
     }
 }
