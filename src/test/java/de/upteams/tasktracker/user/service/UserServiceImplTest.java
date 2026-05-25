@@ -13,6 +13,7 @@ import de.upteams.tasktracker.user.exception.UserNotFoundException;
 import de.upteams.tasktracker.user.persistence.UserRepository;
 import de.upteams.tasktracker.user.service.impl.UserServiceImpl;
 import de.upteams.tasktracker.user.util.AppUserMapper;
+import de.upteams.tasktracker.user.dto.request.ChangePasswordRequestDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,6 +41,8 @@ import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserServiceImpl tests")
@@ -58,6 +62,9 @@ class UserServiceImplTest {
 
     @Mock
     private MultipartFile multipartFile;
+
+    @Mock
+    private BCryptPasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -400,5 +407,66 @@ class UserServiceImplTest {
                     assertThat(ex.getHttpStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
                     assertThat(ex.getMessage()).isEqualTo("Failed to upload avatar");
                 });
+    }
+
+    @Test
+    @DisplayName("Should change current user password")
+    void shouldChangeCurrentUserPassword() {
+        AppUser user = new AppUser("encoded-old-password", "risen.cumin.22@icloud.com");
+        user.setRole(Role.ROLE_USER);
+        user.setConfirmationStatus(ConfirmationStatus.CONFIRMED);
+
+        ChangePasswordRequestDto request = new ChangePasswordRequestDto(
+                "OldPassword123!",
+                "NewPassword123!"
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("risen.cumin.22@icloud.com", null)
+        );
+
+        when(repository.findByEmailIgnoreCase("risen.cumin.22@icloud.com"))
+                .thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("OldPassword123!", "encoded-old-password"))
+                .thenReturn(true);
+        when(passwordEncoder.encode("NewPassword123!"))
+                .thenReturn("encoded-new-password");
+
+        userService.changeCurrentUserPassword(request);
+
+        assertThat(user.getPassword()).isEqualTo("encoded-new-password");
+        verify(passwordEncoder).matches("OldPassword123!", "encoded-old-password");
+        verify(passwordEncoder).encode("NewPassword123!");
+    }
+
+    @Test
+    @DisplayName("Should throw bad request when current password is incorrect")
+    void shouldThrowBadRequestWhenCurrentPasswordIsIncorrect() {
+        AppUser user = new AppUser("encoded-old-password", "risen.cumin.22@icloud.com");
+        user.setRole(Role.ROLE_USER);
+        user.setConfirmationStatus(ConfirmationStatus.CONFIRMED);
+
+        ChangePasswordRequestDto request = new ChangePasswordRequestDto(
+                "WrongPassword123!",
+                "NewPassword123!"
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("risen.cumin.22@icloud.com", null)
+        );
+
+        when(repository.findByEmailIgnoreCase("risen.cumin.22@icloud.com"))
+                .thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("WrongPassword123!", "encoded-old-password"))
+                .thenReturn(false);
+
+        assertThatThrownBy(() -> userService.changeCurrentUserPassword(request))
+                .isInstanceOfSatisfying(RestApiException.class, ex -> {
+                    assertThat(ex.getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(ex.getMessage()).isEqualTo("Current password is incorrect");
+                });
+
+        assertThat(user.getPassword()).isEqualTo("encoded-old-password");
+        verify(passwordEncoder, never()).encode("NewPassword123!");
     }
 }

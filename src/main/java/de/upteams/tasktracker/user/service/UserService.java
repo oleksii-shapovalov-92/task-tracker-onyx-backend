@@ -3,6 +3,7 @@ package de.upteams.tasktracker.user.service;
 import de.upteams.tasktracker.user.dto.request.UserProfileUpdateDto;
 import de.upteams.tasktracker.user.dto.response.UserResponseDto;
 import de.upteams.tasktracker.user.entity.AppUser;
+import de.upteams.tasktracker.user.dto.request.ChangePasswordRequestDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -28,4 +29,6 @@ public interface UserService {
     UserResponseDto updateCurrentUserProfile(UserProfileUpdateDto userProfileUpdateDto);
 
     UserResponseDto updateCurrentUserAvatar(MultipartFile file);
+
+    void changeCurrentUserPassword(ChangePasswordRequestDto request);
 }

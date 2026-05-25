@@ -11,6 +11,7 @@ import de.upteams.tasktracker.user.exception.UserNotFoundException;
 import de.upteams.tasktracker.user.persistence.UserRepository;
 import de.upteams.tasktracker.user.service.UserService;
 import de.upteams.tasktracker.user.util.AppUserMapper;
+import de.upteams.tasktracker.user.dto.request.ChangePasswordRequestDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,6 +38,7 @@ public class UserServiceImpl implements UserService {
     private final AppUserMapper mappingService;
     private final FileService fileService;
     private final AwsS3Configuration awsS3Configuration;
+    private final BCryptPasswordEncoder passwordEncoder;
 
 
     @Override
@@ -187,5 +190,29 @@ public class UserServiceImpl implements UserService {
                 user.getRole().name(),
                 user.getConfirmationStatus()
         );
+    }
+
+    @Override
+    @Transactional
+    public void changeCurrentUserPassword(ChangePasswordRequestDto request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        AppUser user = getByEmailOrThrow(email);
+
+        boolean currentPasswordMatches = passwordEncoder.matches(
+                request.currentPassword(),
+                user.getPassword()
+        );
+
+        if (!currentPasswordMatches) {
+            throw new RestApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "Current password is incorrect"
+            );
+        }
+
+        String encodedNewPassword = passwordEncoder.encode(request.newPassword());
+        user.setPassword(encodedNewPassword);
     }
 }
