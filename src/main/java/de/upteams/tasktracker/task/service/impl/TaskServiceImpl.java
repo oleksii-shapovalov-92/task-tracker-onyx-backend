@@ -40,7 +40,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskResponseDto save(final TaskCreateDto newTaskDto, final AppUser authUser) {
-        final Project project = projectService.getOrTrow(newTaskDto.projectId());
+        final Project project = projectService.getOrTrow(newTaskDto.projectId(), authUser);
         final boolean userInProject = collaboratorService.isUserInProject(authUser, project);
         if (!userInProject) {
             throw new RestApiException(HttpStatus.FORBIDDEN, "User has no access to this project");
@@ -52,18 +52,18 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public TaskResponseDto getById(String id) {
-        return mappingService.mapEntityToDto(getOrThrow(id));
+    public TaskResponseDto getById(String id, AppUser authUser) {
+        return mappingService.mapEntityToDto(getOrThrow(id, authUser));
     }
 
     @Override
-    public Task getOrThrow(String id) {
-        return findById(id)
+    public Task getOrThrow(String id, AppUser authUser) {
+        return findById(id, authUser)
                 .orElseThrow(TaskNotFoundException::new);
     }
 
     @Override
-    public Optional<Task> findById(String id) {
+    public Optional<Task> findById(String id, AppUser authUser) {
         final UUID taskId;
 
         try {
@@ -73,12 +73,12 @@ public class TaskServiceImpl implements TaskService {
         }
 
         return repository
-                .findById(taskId);
+                .findByIdAndProjectOwner(taskId, authUser);
     }
 
     @Override
     public List<TaskResponseDto> getAll(final String projectId, final AppUser authUser) {
-        final Project project = projectService.getOrTrow(projectId);
+        final Project project = projectService.getOrTrow(projectId, authUser);
         boolean userInProject = collaboratorService.isUserInProject(authUser, project);
         if (!userInProject) {
             throw new RestApiException(HttpStatus.FORBIDDEN, "User has no access to this project");
@@ -92,7 +92,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public void delete(final String id, final AppUser changer) {
-        final Task existedTask = getOrThrow(id);
+        final Task existedTask = getOrThrow(id, changer);
         final boolean hasPermission = collaboratorService.hasUserPermission(
                 changer,
                 existedTask.getProject(),
@@ -110,7 +110,7 @@ public class TaskServiceImpl implements TaskService {
             final TaskStatus status,
             final AppUser changer
     ) {
-        final Task existedTask = getOrThrow(id);
+        final Task existedTask = getOrThrow(id, changer);
 
         final boolean hasPermission = collaboratorService.hasUserPermission(
                 changer,
@@ -133,7 +133,7 @@ public class TaskServiceImpl implements TaskService {
             final TaskUpdateDto request,
             final AppUser changer
     ) {
-        final Task existedTask = getOrThrow(id);
+        final Task existedTask = getOrThrow(id, changer);
 
         final boolean hasPermission = collaboratorService.hasUserPermission(
                 changer,

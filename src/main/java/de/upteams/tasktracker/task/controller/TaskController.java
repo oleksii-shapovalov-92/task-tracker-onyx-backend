@@ -34,7 +34,7 @@ public class TaskController implements TaskApi {
             String id,
             AuthUserDetails principal
     ) {
-        return service.getById(id);
+        return service.getById(id, principal.user());
     }
 
     @Override

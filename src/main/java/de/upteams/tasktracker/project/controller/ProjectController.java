@@ -25,19 +25,20 @@ public class ProjectController implements ProjectApi {
     public ProjectResponseDto save(ProjectCreateDto newProjectDto, AuthUserDetails principal) {
         return service.save(newProjectDto, principal.user());
     }
-
     @Override
-    public ProjectResponseDto getById(String id) {
-        return service.getById(id);
+    public ProjectResponseDto getById(String id, AuthUserDetails principal) {
+        return service.getById(id, principal.user());
     }
 
     @Override
-    public List<ProjectResponseDto> getAll() {
-        return service.getAll();
+    public List<ProjectResponseDto> getAll(AuthUserDetails principal) {
+        return service.getAll(principal.user());
+    }
+    @Override
+    public void deleteById(String id, AuthUserDetails principal) {
+        service.delete(id, principal.user());
     }
 
-    @Override
-    public void deleteById(String id) {
-        service.delete(id);
-    }
+
 }
+

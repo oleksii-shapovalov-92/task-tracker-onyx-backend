@@ -14,11 +14,11 @@ public interface ProjectService {
 
     ProjectResponseDto save(ProjectCreateDto newProjectDto, AppUser projectOwner);
 
-    ProjectResponseDto getById(String id);
+    ProjectResponseDto getById(String id, AppUser authUser);
 
-    Project getOrTrow(String id);
+    Project getOrTrow(String id, AppUser authUser);
 
-    List<ProjectResponseDto> getAll();
+    List<ProjectResponseDto> getAll(AppUser authUser);
 
-    void delete(String id);
+    void delete(String id, AppUser authUser);
 }

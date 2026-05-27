@@ -111,7 +111,11 @@ public interface ProjectApi {
     ProjectResponseDto getById(
             @PathVariable
             @Parameter(required = true, description = "Project ID to search")
-            String id
+            String id,
+
+            @AuthenticationPrincipal
+            @Parameter(hidden = true)
+            AuthUserDetails principal
     );
 
     @Operation(summary = "Get all Projects", description = "Get all Projects from the Database")
@@ -121,8 +125,11 @@ public interface ProjectApi {
                             array = @ArraySchema(schema = @Schema(implementation = ProjectResponseDto.class))))
     })
     @GetMapping
-    List<ProjectResponseDto> getAll();
-
+    List<ProjectResponseDto> getAll(
+            @AuthenticationPrincipal
+            @Parameter(hidden = true)
+            AuthUserDetails principal
+    );
     @Operation(summary = "Delete Project", description = "Delete Project from the Database by its ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Project successfully deleted"),
@@ -157,6 +164,10 @@ public interface ProjectApi {
     void deleteById(
             @PathVariable
             @Parameter(required = true, description = "Project ID to delete")
-            String id
+            String id,
+
+            @AuthenticationPrincipal
+            @Parameter(hidden = true)
+            AuthUserDetails principal
     );
 }

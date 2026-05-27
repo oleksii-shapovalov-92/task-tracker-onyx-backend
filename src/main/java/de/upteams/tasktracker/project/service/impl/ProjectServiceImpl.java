@@ -42,12 +42,12 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectResponseDto getById(String id) {
-        return mappingService.mapEntityToDto(getOrTrow(id));
+    public ProjectResponseDto getById(String id, AppUser authUser) {
+        return mappingService.mapEntityToDto(getOrTrow(id, authUser));
     }
 
     @Override
-    public Project getOrTrow(String id) {
+    public Project getOrTrow(String id, AppUser authUser) {
         final UUID projectId;
 
         try {
@@ -57,33 +57,22 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         return repository
-                .findById(projectId)
+                .findByIdAndOwner(projectId, authUser)
                 .orElseThrow(ProjectNotFoundException::new);
     }
 
     @Override
-    public List<ProjectResponseDto> getAll() {
+    public List<ProjectResponseDto> getAll(AppUser authUser) {
         return repository
-                .findAll()
+                .findAllByOwner(authUser)
                 .stream()
                 .map(mappingService::mapEntityToDto)
                 .toList();
     }
 
     @Override
-    public void delete(String id) {
-        final UUID projectId;
-
-        try {
-            projectId = UUID.fromString(id);
-        } catch (IllegalArgumentException ex) {
-            throw new RestApiException(HttpStatus.BAD_REQUEST, "Invalid projectId format");
-        }
-
-        if (!repository.existsById(projectId)) {
-            throw new ProjectNotFoundException();
-        }
-
-        repository.deleteById(projectId);
+    public void delete(String id, AppUser authUser) {
+        Project project = getOrTrow(id, authUser);
+        repository.delete(project);
     }
 }
