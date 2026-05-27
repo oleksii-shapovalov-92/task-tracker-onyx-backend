@@ -18,9 +18,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Service for various operations with Projects
- */
 @Service
 @RequiredArgsConstructor
 public class ProjectServiceImpl implements ProjectService {

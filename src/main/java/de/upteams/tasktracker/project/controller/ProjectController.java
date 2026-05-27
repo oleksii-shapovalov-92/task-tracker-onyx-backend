@@ -9,9 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/**
- * REST Controller that receives http-requests for various operations with Projects
- */
 @RestController
 public class ProjectController implements ProjectApi {
 
@@ -25,6 +22,7 @@ public class ProjectController implements ProjectApi {
     public ProjectResponseDto save(ProjectCreateDto newProjectDto, AuthUserDetails principal) {
         return service.save(newProjectDto, principal.user());
     }
+
     @Override
     public ProjectResponseDto getById(String id, AuthUserDetails principal) {
         return service.getById(id, principal.user());
@@ -34,11 +32,9 @@ public class ProjectController implements ProjectApi {
     public List<ProjectResponseDto> getAll(AuthUserDetails principal) {
         return service.getAll(principal.user());
     }
+
     @Override
     public void deleteById(String id, AuthUserDetails principal) {
         service.delete(id, principal.user());
     }
-
-
 }
-

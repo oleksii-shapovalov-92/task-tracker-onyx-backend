@@ -4,6 +4,7 @@ import de.upteams.tasktracker.exception.handling.response.ErrorResponseDto;
 import de.upteams.tasktracker.security.handler.ErrorResponse;
 import de.upteams.tasktracker.user.dto.request.UserProfileUpdateDto;
 import de.upteams.tasktracker.user.dto.response.UserResponseDto;
+import de.upteams.tasktracker.user.dto.request.ChangePasswordRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -155,6 +156,60 @@ public interface UserApiSwaggerDoc {
                             schema = @Schema(implementation = UserProfileUpdateDto.class)
                     ))
             UserProfileUpdateDto userProfileUpdateDto
+    );
+
+    @Operation(
+            summary = "Change current user password",
+            description = "Changes password for the currently authenticated user"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Password changed successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request data or incorrect current password",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    })
+    ResponseEntity<Void> changeCurrentUserPassword(
+            @RequestBody(
+                    description = "Current and new password",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ChangePasswordRequestDto.class)
+                    )
+            )
+            ChangePasswordRequestDto request
     );
 
     @Operation(

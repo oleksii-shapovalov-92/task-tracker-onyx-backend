@@ -25,11 +25,11 @@ class ProjectControllerDeleteNotFoundTest {
         AppUser authUser = mock(AppUser.class);
         AuthUserDetails principal = mock(AuthUserDetails.class);
 
+        org.mockito.Mockito.when(principal.user()).thenReturn(authUser);
+
         doThrow(new ProjectNotFoundException())
                 .when(projectService)
                 .delete(nonExistentProjectId, authUser);
-
-        org.mockito.Mockito.when(principal.user()).thenReturn(authUser);
 
         assertThatThrownBy(() -> controller.deleteById(nonExistentProjectId, principal))
                 .isInstanceOf(ProjectNotFoundException.class);
