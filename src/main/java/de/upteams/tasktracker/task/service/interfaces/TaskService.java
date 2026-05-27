@@ -17,11 +17,11 @@ public interface TaskService {
 
     TaskResponseDto save(TaskCreateDto newTaskDto, AppUser authUser);
 
-    TaskResponseDto getById(String id);
+    TaskResponseDto getById(String id, AppUser authUser);
 
-    Task getOrThrow(String id);
+    Task getOrThrow(String id, AppUser authUser);
 
-    Optional<Task> findById(String id);
+    Optional<Task> findById(String id, AppUser authUser);
 
     List<TaskResponseDto> getAll(String projectId, AppUser authUser);
 
