@@ -4,6 +4,7 @@ import de.upteams.tasktracker.collaborator.entity.ProjectRoles;
 import de.upteams.tasktracker.collaborator.service.interfaces.CollaboratorService;
 import de.upteams.tasktracker.exception.handling.exceptions.common.RestApiException;
 import de.upteams.tasktracker.project.dto.request.ProjectCreateDto;
+import de.upteams.tasktracker.project.dto.request.ProjectUpdateDto;
 import de.upteams.tasktracker.project.dto.response.ProjectResponseDto;
 import de.upteams.tasktracker.project.entity.Project;
 import de.upteams.tasktracker.project.exception.ProjectNotFoundException;
@@ -65,6 +66,25 @@ public class ProjectServiceImpl implements ProjectService {
                 .stream()
                 .map(mappingService::mapEntityToDto)
                 .toList();
+    }
+
+    @Override
+    public ProjectResponseDto update(
+            String id,
+            ProjectUpdateDto request,
+            AppUser authUser
+    ) {
+        Project project = getOrTrow(id, authUser);
+
+        if (request.title() != null) {
+            project.setTitle(request.title());
+        }
+
+        if (request.description() != null) {
+            project.setDescription(request.description());
+        }
+
+        return mappingService.mapEntityToDto(repository.save(project));
     }
 
     @Override

@@ -2,6 +2,7 @@ package de.upteams.tasktracker.project.controller;
 
 import de.upteams.tasktracker.project.controller.api.ProjectApi;
 import de.upteams.tasktracker.project.dto.request.ProjectCreateDto;
+import de.upteams.tasktracker.project.dto.request.ProjectUpdateDto;
 import de.upteams.tasktracker.project.dto.response.ProjectResponseDto;
 import de.upteams.tasktracker.project.service.interfaces.ProjectService;
 import de.upteams.tasktracker.security.service.AuthUserDetails;
@@ -31,6 +32,15 @@ public class ProjectController implements ProjectApi {
     @Override
     public List<ProjectResponseDto> getAll(AuthUserDetails principal) {
         return service.getAll(principal.user());
+    }
+
+    @Override
+    public ProjectResponseDto update(
+            String id,
+            ProjectUpdateDto request,
+            AuthUserDetails principal
+    ) {
+        return service.update(id, request, principal.user());
     }
 
     @Override

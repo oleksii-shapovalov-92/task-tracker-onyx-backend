@@ -1,6 +1,8 @@
 package de.upteams.tasktracker.project.service;
 
 import de.upteams.tasktracker.exception.handling.exceptions.common.RestApiException;
+import de.upteams.tasktracker.project.dto.request.ProjectUpdateDto;
+import de.upteams.tasktracker.project.dto.response.ProjectResponseDto;
 import de.upteams.tasktracker.project.entity.Project;
 import de.upteams.tasktracker.project.exception.ProjectNotFoundException;
 import de.upteams.tasktracker.project.persistence.ProjectRepository;
@@ -88,5 +90,68 @@ class ProjectServiceImplTest {
 
         verify(repository).findByIdAndOwner(projectId, authUser);
         verify(repository, never()).delete(any(Project.class));
+    }
+
+    @Test
+    @DisplayName("Should update project when authenticated user is owner")
+    void shouldUpdateProjectWhenAuthenticatedUserIsOwner() {
+        UUID projectId = UUID.randomUUID();
+
+        Project project = new Project();
+        project.setTitle("Old title");
+        project.setDescription("Old description");
+
+        ProjectUpdateDto request =
+                new ProjectUpdateDto("New title", "New description");
+
+        ProjectResponseDto response =
+                mock(ProjectResponseDto.class);
+
+        when(repository.findByIdAndOwner(projectId, authUser))
+                .thenReturn(Optional.of(project));
+
+        when(repository.save(project))
+                .thenReturn(project);
+
+        when(mappingService.mapEntityToDto(project))
+                .thenReturn(response);
+
+        ProjectResponseDto result =
+                projectService.update(
+                        projectId.toString(),
+                        request,
+                        authUser
+                );
+
+        assertThat(result).isEqualTo(response);
+
+        assertThat(project.getTitle()).isEqualTo("New title");
+        assertThat(project.getDescription()).isEqualTo("New description");
+
+        verify(repository).findByIdAndOwner(projectId, authUser);
+        verify(repository).save(project);
+    }
+
+    @Test
+    @DisplayName("Should throw ProjectNotFoundException when updating project owned by another user")
+    void shouldThrowProjectNotFoundExceptionWhenUpdatingProjectOwnedByAnotherUser() {
+        UUID projectId = UUID.randomUUID();
+
+        ProjectUpdateDto request =
+                new ProjectUpdateDto("New title", "New description");
+
+        when(repository.findByIdAndOwner(projectId, authUser))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                projectService.update(
+                        projectId.toString(),
+                        request,
+                        authUser
+                ))
+                .isInstanceOf(ProjectNotFoundException.class);
+
+        verify(repository).findByIdAndOwner(projectId, authUser);
+        verify(repository, never()).save(any(Project.class));
     }
 }
