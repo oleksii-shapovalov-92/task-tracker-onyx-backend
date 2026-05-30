@@ -3,6 +3,7 @@ package de.upteams.tasktracker.project.controller.api;
 import de.upteams.tasktracker.exception.handling.response.ErrorResponseDto;
 import de.upteams.tasktracker.exception.handling.response.ValidationErrorDto;
 import de.upteams.tasktracker.project.dto.request.ProjectCreateDto;
+import de.upteams.tasktracker.project.dto.request.ProjectUpdateDto;
 import de.upteams.tasktracker.project.dto.response.ProjectResponseDto;
 import de.upteams.tasktracker.security.service.AuthUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -122,6 +123,23 @@ public interface ProjectApi {
     })
     @GetMapping
     List<ProjectResponseDto> getAll();
+
+    @Operation(summary = "Update Project", description = "Update existing Project")
+    @ApiResponse(responseCode = "200", description = "Project successfully updated")
+    @PatchMapping("/{id}")
+    ProjectResponseDto update(
+            @PathVariable
+            @Parameter(required = true, description = "Project ID to update")
+            String id,
+
+            @RequestBody
+            @Valid
+            ProjectUpdateDto request,
+
+            @AuthenticationPrincipal
+            @Parameter(hidden = true)
+            AuthUserDetails principal
+    );
 
     @Operation(summary = "Delete Project", description = "Delete Project from the Database by its ID")
     @ApiResponses(value = {
