@@ -96,13 +96,8 @@ class ProjectServiceImplTest {
     @DisplayName("Should update project when authenticated user is owner")
     void shouldUpdateProjectWhenAuthenticatedUserIsOwner() {
         UUID projectId = UUID.randomUUID();
-        UUID authenticatedUserId = UUID.randomUUID();
-
-        AppUser authenticatedUser = mock(AppUser.class);
-        when(authenticatedUser.getId()).thenReturn(authenticatedUserId);
 
         Project project = new Project();
-        project.setOwner(authenticatedUser);
         project.setTitle("Old title");
         project.setDescription("Old description");
 
@@ -112,7 +107,7 @@ class ProjectServiceImplTest {
         ProjectResponseDto response =
                 mock(ProjectResponseDto.class);
 
-        when(repository.findById(projectId))
+        when(repository.findByIdAndOwner(projectId, authUser))
                 .thenReturn(Optional.of(project));
 
         when(repository.save(project))
@@ -125,7 +120,7 @@ class ProjectServiceImplTest {
                 projectService.update(
                         projectId.toString(),
                         request,
-                        authenticatedUser
+                        authUser
                 );
 
         assertThat(result).isEqualTo(response);
@@ -133,41 +128,30 @@ class ProjectServiceImplTest {
         assertThat(project.getTitle()).isEqualTo("New title");
         assertThat(project.getDescription()).isEqualTo("New description");
 
+        verify(repository).findByIdAndOwner(projectId, authUser);
         verify(repository).save(project);
     }
 
     @Test
     @DisplayName("Should throw ProjectNotFoundException when updating project owned by another user")
     void shouldThrowProjectNotFoundExceptionWhenUpdatingProjectOwnedByAnotherUser() {
-        UUID authenticatedUserId = UUID.randomUUID();
-        UUID projectOwnerId = UUID.randomUUID();
-
-        AppUser authenticatedUser = mock(AppUser.class);
-        when(authenticatedUser.getId()).thenReturn(authenticatedUserId);
-
-        AppUser projectOwner = mock(AppUser.class);
-        when(projectOwner.getId()).thenReturn(projectOwnerId);
-
-        Project project = new Project();
-        project.setOwner(projectOwner);
+        UUID projectId = UUID.randomUUID();
 
         ProjectUpdateDto request =
                 new ProjectUpdateDto("New title", "New description");
 
-        ProjectServiceImpl spyService = spy(projectService);
-
-        doReturn(project)
-                .when(spyService)
-                .getOrTrow(anyString());
+        when(repository.findByIdAndOwner(projectId, authUser))
+                .thenReturn(Optional.empty());
 
         assertThatThrownBy(() ->
-                spyService.update(
-                        UUID.randomUUID().toString(),
+                projectService.update(
+                        projectId.toString(),
                         request,
-                        authenticatedUser
+                        authUser
                 ))
                 .isInstanceOf(ProjectNotFoundException.class);
 
+        verify(repository).findByIdAndOwner(projectId, authUser);
         verify(repository, never()).save(any(Project.class));
     }
 }
