@@ -32,153 +32,87 @@ import java.util.List;
 public interface ProjectApi {
 
     @Operation(summary = "Save/create Project", description = "Save new Project to the Database")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Project successfully created",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ProjectResponseDto.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                      "id": "7",
-                                      "title": "New Website Development",
-                                      "description": "A Project to develop a new company website",
-                                      "owner": {
-                                        "id": "42",
-                                        "email": "tes_dev@upteams.de",
-                                        "firstName": "Test",
-                                        "lastName": "Dev"
-                                      }
-                                    }
-                                    """))
-            ),
-            @ApiResponse(responseCode = "400", description = "Invalid project payload",
-                    content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = ValidationErrorDto.class)),
-                            examples = @ExampleObject(value = """
-                                    [
-                                      { "field": "title", "messages": ["must not be blank"] }
-                                    ]
-                                    """))
-            )
-    })
+    @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Project successfully created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProjectResponseDto.class), examples = @ExampleObject(value = """
+            {
+              "id": "7",
+              "title": "New Website Development",
+              "description": "A Project to develop a new company website",
+              "owner": {
+                "id": "42",
+                "email": "tes_dev@upteams.de",
+                "firstName": "Test",
+                "lastName": "Dev"
+              }
+            }
+            """))), @ApiResponse(responseCode = "400", description = "Invalid project payload", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ValidationErrorDto.class)), examples = @ExampleObject(value = """
+            [
+              { "field": "title", "messages": ["must not be blank"] }
+            ]
+            """)))})
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    ProjectResponseDto save(
-            @RequestBody
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    required = true,
-                    description = "Instance of Project to save"
-            )
-            @Valid
-            ProjectCreateDto newProjectDto,
+    ProjectResponseDto save(@RequestBody @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "Instance of Project to save") @Valid ProjectCreateDto newProjectDto,
 
-            @AuthenticationPrincipal
-            @Parameter(hidden = true)
-            AuthUserDetails principal
-    );
+                            @AuthenticationPrincipal @Parameter(hidden = true) AuthUserDetails principal);
 
     @Operation(summary = "Get Project", description = "Get one Project from the Database by its ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Project found",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ProjectResponseDto.class)))
-            ,
-            @ApiResponse(responseCode = "400", description = "Invalid project ID format",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponseDto.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                      "timestamp": "2025-04-26T10:00:00",
-                                      "status": 400,
-                                      "error": "Bad Request",
-                                      "message": "Invalid projectId format",
-                                      "path": "/api/v1/projects/invalid-id"
-                                    }
-                                    """)))
-            ,
-            @ApiResponse(responseCode = "404", description = "Project not found",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponseDto.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                      "timestamp": "2025-04-26T10:00:00",
-                                      "status": 404,
-                                      "error": "Not Found",
-                                      "message": "Project not found with id: 7",
-                                      "path": "/api/v1/projects/7"
-                                    }
-                                    """)))
-    })
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Project found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProjectResponseDto.class))), @ApiResponse(responseCode = "400", description = "Invalid project ID format", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDto.class), examples = @ExampleObject(value = """
+            {
+              "timestamp": "2025-04-26T10:00:00",
+              "status": 400,
+              "error": "Bad Request",
+              "message": "Invalid projectId format",
+              "path": "/api/v1/projects/invalid-id"
+            }
+            """))), @ApiResponse(responseCode = "404", description = "Project not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDto.class), examples = @ExampleObject(value = """
+            {
+              "timestamp": "2025-04-26T10:00:00",
+              "status": 404,
+              "error": "Not Found",
+              "message": "Project not found with id: 7",
+              "path": "/api/v1/projects/7"
+            }
+            """)))})
     @GetMapping("/{id}")
-    ProjectResponseDto getById(
-            @PathVariable
-            @Parameter(required = true, description = "Project ID to search")
-            String id
-    );
+    ProjectResponseDto getById(@PathVariable @Parameter(required = true, description = "Project ID to search") String id,
+
+                               @AuthenticationPrincipal @Parameter(hidden = true) AuthUserDetails principal);
 
     @Operation(summary = "Get all Projects", description = "Get all Projects from the Database")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "All Projects list",
-                    content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = ProjectResponseDto.class))))
-    })
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All Projects list", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ProjectResponseDto.class))))})
     @GetMapping
-    List<ProjectResponseDto> getAll();
+    List<ProjectResponseDto> getAll(@AuthenticationPrincipal @Parameter(hidden = true) AuthUserDetails principal);
 
     @Operation(summary = "Update Project", description = "Update existing Project")
     @ApiResponse(responseCode = "200", description = "Project successfully updated")
     @PatchMapping("/{id}")
-    ProjectResponseDto update(
-            @PathVariable
-            @Parameter(required = true, description = "Project ID to update")
-            String id,
+    ProjectResponseDto update(@PathVariable @Parameter(required = true, description = "Project ID to update") String id,
 
-            @RequestBody
-            @Valid
-            ProjectUpdateDto request,
+                              @RequestBody @Valid ProjectUpdateDto request,
 
-            @AuthenticationPrincipal
-            @Parameter(hidden = true)
-            AuthUserDetails principal
-    );
+                              @AuthenticationPrincipal @Parameter(hidden = true) AuthUserDetails principal);
 
     @Operation(summary = "Delete Project", description = "Delete Project from the Database by its ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Project successfully deleted"),
-            @ApiResponse(responseCode = "400", description = "Invalid project ID format",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponseDto.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                      "timestamp": "2025-04-26T10:00:00",
-                                      "status": 400,
-                                      "error": "Bad Request",
-                                      "message": "Invalid projectId format",
-                                      "path": "/api/v1/projects/invalid-id"
-                                    }
-                                    """)))
-            ,
-            @ApiResponse(responseCode = "404", description = "Project not found",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponseDto.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                      "timestamp": "2025-04-26T10:00:00",
-                                      "status": 404,
-                                      "error": "Not Found",
-                                      "message": "Project not found with id: 7",
-                                      "path": "/api/v1/projects/7"
-                                    }
-                                    """)))
-    })
+    @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "Project successfully deleted"), @ApiResponse(responseCode = "400", description = "Invalid project ID format", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDto.class), examples = @ExampleObject(value = """
+            {
+              "timestamp": "2025-04-26T10:00:00",
+              "status": 400,
+              "error": "Bad Request",
+              "message": "Invalid projectId format",
+              "path": "/api/v1/projects/invalid-id"
+            }
+            """))), @ApiResponse(responseCode = "404", description = "Project not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDto.class), examples = @ExampleObject(value = """
+            {
+              "timestamp": "2025-04-26T10:00:00",
+              "status": 404,
+              "error": "Not Found",
+              "message": "Project not found with id: 7",
+              "path": "/api/v1/projects/7"
+            }
+            """)))})
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
-    void deleteById(
-            @PathVariable
-            @Parameter(required = true, description = "Project ID to delete")
-            String id,
+    void deleteById(@PathVariable @Parameter(required = true, description = "Project ID to delete") String id,
 
-            @AuthenticationPrincipal
-            @Parameter(hidden = true)
-            AuthUserDetails principal
-    );
+                    @AuthenticationPrincipal @Parameter(hidden = true) AuthUserDetails principal);
 }

@@ -34,13 +34,16 @@ class ProjectServiceImplTest {
     @Mock
     private ProjectMapper mappingService;
 
+    @Mock
+    private AppUser authUser;
+
     @InjectMocks
     private ProjectServiceImpl projectService;
 
     @Test
     @DisplayName("Should throw bad request when project id format is invalid in getOrTrow")
     void shouldThrowBadRequestWhenProjectIdFormatIsInvalidInGetOrTrow() {
-        assertThatThrownBy(() -> projectService.getOrTrow("invalid-id"))
+        assertThatThrownBy(() -> projectService.getOrTrow("invalid-id", authUser))
                 .isInstanceOfSatisfying(RestApiException.class, ex -> {
                     assertThat(ex.getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
                     assertThat(ex.getMessage()).isEqualTo("Invalid projectId format");
@@ -52,9 +55,7 @@ class ProjectServiceImplTest {
     @Test
     @DisplayName("Should throw bad request when project id format is invalid in delete")
     void shouldThrowBadRequestWhenProjectIdFormatIsInvalidInDelete() {
-        AppUser authenticatedUser = mock(AppUser.class);
-
-        assertThatThrownBy(() -> projectService.delete("invalid-id", authenticatedUser))
+        assertThatThrownBy(() -> projectService.delete("invalid-id", authUser))
                 .isInstanceOfSatisfying(RestApiException.class, ex -> {
                     assertThat(ex.getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
                     assertThat(ex.getMessage()).isEqualTo("Invalid projectId format");
@@ -64,65 +65,30 @@ class ProjectServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should delete project by parsed uuid when project exists and user is owner")
-    void shouldDeleteProjectByParsedUuidWhenProjectExistsAndUserIsOwner() {
+    @DisplayName("Should delete project by parsed uuid when project exists and belongs to owner")
+    void shouldDeleteProjectByParsedUuidWhenProjectExistsAndBelongsToOwner() {
         UUID projectId = UUID.randomUUID();
-        UUID authenticatedUserId = UUID.randomUUID();
-
-        AppUser authenticatedUser = mock(AppUser.class);
-        when(authenticatedUser.getId()).thenReturn(authenticatedUserId);
-
         Project project = new Project();
 
-        project.setOwner(authenticatedUser);
+        when(repository.findByIdAndOwner(projectId, authUser)).thenReturn(Optional.of(project));
 
-        when(repository.findById(projectId)).thenReturn(Optional.of(project));
+        projectService.delete(projectId.toString(), authUser);
 
-        projectService.delete(projectId.toString(), authenticatedUser);
-
-        verify(repository).findById(projectId);
+        verify(repository).findByIdAndOwner(projectId, authUser);
         verify(repository).delete(project);
     }
 
     @Test
-    @DisplayName("Should throw ProjectNotFoundException when deleting non-existent project")
-    void shouldThrowProjectNotFoundExceptionWhenDeletingNonExistentProject() {
+    @DisplayName("Should throw ProjectNotFoundException when deleting non-existent or foreign project")
+    void shouldThrowProjectNotFoundExceptionWhenDeletingNonExistentOrForeignProject() {
         UUID projectId = UUID.randomUUID();
 
-        AppUser authenticatedUser = mock(AppUser.class);
+        when(repository.findByIdAndOwner(projectId, authUser)).thenReturn(Optional.empty());
 
-        when(repository.findById(projectId)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> projectService.delete(projectId.toString(), authenticatedUser))
+        assertThatThrownBy(() -> projectService.delete(projectId.toString(), authUser))
                 .isInstanceOf(ProjectNotFoundException.class);
 
-        verify(repository).findById(projectId);
-        verify(repository, never()).delete(any(Project.class));
-    }
-
-    @Test
-    @DisplayName("Should throw ProjectNotFoundException when deleting project owned by another user")
-    void shouldThrowProjectNotFoundExceptionWhenDeletingProjectOwnedByAnotherUser() {
-        UUID projectId = UUID.randomUUID();
-        UUID authenticatedUserId = UUID.randomUUID();
-        UUID projectOwnerId = UUID.randomUUID();
-
-        AppUser authenticatedUser = mock(AppUser.class);
-        when(authenticatedUser.getId()).thenReturn(authenticatedUserId);
-
-        AppUser projectOwner = mock(AppUser.class);
-        when(projectOwner.getId()).thenReturn(projectOwnerId);
-
-        Project project = new Project();
-
-        project.setOwner(projectOwner);
-
-        when(repository.findById(projectId)).thenReturn(Optional.of(project));
-
-        assertThatThrownBy(() -> projectService.delete(projectId.toString(), authenticatedUser))
-                .isInstanceOf(ProjectNotFoundException.class);
-
-        verify(repository).findById(projectId);
+        verify(repository).findByIdAndOwner(projectId, authUser);
         verify(repository, never()).delete(any(Project.class));
     }
 

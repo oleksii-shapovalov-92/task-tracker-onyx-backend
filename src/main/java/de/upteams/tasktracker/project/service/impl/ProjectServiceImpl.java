@@ -40,12 +40,12 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectResponseDto getById(String id) {
-        return mappingService.mapEntityToDto(getOrTrow(id));
+    public ProjectResponseDto getById(String id, AppUser authUser) {
+        return mappingService.mapEntityToDto(getOrTrow(id, authUser));
     }
 
     @Override
-    public Project getOrTrow(String id) {
+    public Project getOrTrow(String id, AppUser authUser) {
         final UUID projectId;
 
         try {
@@ -55,14 +55,14 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         return repository
-                .findById(projectId)
+                .findByIdAndOwner(projectId, authUser)
                 .orElseThrow(ProjectNotFoundException::new);
     }
 
     @Override
-    public List<ProjectResponseDto> getAll() {
+    public List<ProjectResponseDto> getAll(AppUser authUser) {
         return repository
-                .findAll()
+                .findAllByOwner(authUser)
                 .stream()
                 .map(mappingService::mapEntityToDto)
                 .toList();
@@ -72,13 +72,9 @@ public class ProjectServiceImpl implements ProjectService {
     public ProjectResponseDto update(
             String id,
             ProjectUpdateDto request,
-            AppUser authenticatedUser
+            AppUser authUser
     ) {
-        Project project = getOrTrow(id);
-
-        if (!project.getOwner().getId().equals(authenticatedUser.getId())) {
-            throw new ProjectNotFoundException();
-        }
+        Project project = getOrTrow(id, authUser);
 
         if (request.title() != null) {
             project.setTitle(request.title());
@@ -92,23 +88,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void delete(String id, AppUser authenticatedUser) {
-        final UUID projectId;
-
-        try {
-            projectId = UUID.fromString(id);
-        } catch (IllegalArgumentException ex) {
-            throw new RestApiException(HttpStatus.BAD_REQUEST, "Invalid projectId format");
-        }
-
-        Project project = repository
-                .findById(projectId)
-                .orElseThrow(ProjectNotFoundException::new);
-
-        if (!project.getOwner().getId().equals(authenticatedUser.getId())) {
-            throw new ProjectNotFoundException();
-        }
-
+    public void delete(String id, AppUser authUser) {
+        Project project = getOrTrow(id, authUser);
         repository.delete(project);
     }
 }

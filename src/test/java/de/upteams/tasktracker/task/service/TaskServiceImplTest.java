@@ -5,15 +5,15 @@ import de.upteams.tasktracker.collaborator.service.interfaces.CollaboratorServic
 import de.upteams.tasktracker.exception.handling.exceptions.common.RestApiException;
 import de.upteams.tasktracker.project.entity.Project;
 import de.upteams.tasktracker.project.service.interfaces.ProjectService;
+import de.upteams.tasktracker.task.dto.request.TaskUpdateDto;
+import de.upteams.tasktracker.task.dto.response.TaskResponseDto;
 import de.upteams.tasktracker.task.entity.Task;
+import de.upteams.tasktracker.task.entity.TaskStatus;
+import de.upteams.tasktracker.task.exception.TaskNotFoundException;
 import de.upteams.tasktracker.task.persistence.TaskRepository;
 import de.upteams.tasktracker.task.service.impl.TaskServiceImpl;
 import de.upteams.tasktracker.task.utils.TaskMappingService;
 import de.upteams.tasktracker.user.entity.AppUser;
-import de.upteams.tasktracker.task.dto.response.TaskResponseDto;
-import de.upteams.tasktracker.task.entity.TaskStatus;
-import de.upteams.tasktracker.task.exception.TaskNotFoundException;
-import de.upteams.tasktracker.task.dto.request.TaskUpdateDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,8 +23,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -53,7 +53,7 @@ class TaskServiceImplTest {
     @Test
     @DisplayName("Should throw bad request when task id format is invalid in findById")
     void shouldThrowBadRequestWhenTaskIdFormatIsInvalidInFindById() {
-        assertThatThrownBy(() -> taskService.findById("invalid-id"))
+        assertThatThrownBy(() -> taskService.findById("invalid-id", mock(AppUser.class)))
                 .isInstanceOfSatisfying(RestApiException.class, ex -> {
                     assertThat(ex.getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
                     assertThat(ex.getMessage()).isEqualTo("Invalid taskId format");
@@ -65,7 +65,7 @@ class TaskServiceImplTest {
     @Test
     @DisplayName("Should throw bad request when task id format is invalid in getOrThrow")
     void shouldThrowBadRequestWhenTaskIdFormatIsInvalidInGetOrThrow() {
-        assertThatThrownBy(() -> taskService.getOrThrow("invalid-id"))
+        assertThatThrownBy(() -> taskService.getOrThrow("invalid-id", mock(AppUser.class)))
                 .isInstanceOfSatisfying(RestApiException.class, ex -> {
                     assertThat(ex.getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
                     assertThat(ex.getMessage()).isEqualTo("Invalid taskId format");
@@ -88,13 +88,13 @@ class TaskServiceImplTest {
 
         String projectId = project.getId().toString();
 
-        when(projectService.getOrTrow(projectId)).thenReturn(project);
+        when(projectService.getOrTrow(projectId, owner)).thenReturn(project);
         when(collaboratorService.isUserInProject(owner, project)).thenReturn(true);
         when(repository.findByProject(project)).thenReturn(List.of(task));
 
         taskService.getAll(projectId, owner);
 
-        verify(projectService).getOrTrow(projectId);
+        verify(projectService).getOrTrow(projectId, owner);
         verify(collaboratorService).isUserInProject(owner, project);
         verify(repository).findByProject(project);
     }
@@ -115,7 +115,7 @@ class TaskServiceImplTest {
 
         TaskResponseDto responseDto = mock(TaskResponseDto.class);
 
-        when(repository.findById(taskId)).thenReturn(Optional.of(task));
+        when(repository.findByIdAndProjectOwner(taskId, user)).thenReturn(Optional.of(task));
         when(collaboratorService.hasUserPermission(
                 eq(user),
                 eq(project),
@@ -133,7 +133,7 @@ class TaskServiceImplTest {
         assertThat(task.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
         assertThat(result).isSameAs(responseDto);
 
-        verify(repository).findById(taskId);
+        verify(repository).findByIdAndProjectOwner(taskId, user);
         verify(collaboratorService).hasUserPermission(
                 user,
                 project,
@@ -157,7 +157,7 @@ class TaskServiceImplTest {
         setField(task, "id", taskId);
         task.setStatus(TaskStatus.TODO);
 
-        when(repository.findById(taskId)).thenReturn(Optional.of(task));
+        when(repository.findByIdAndProjectOwner(taskId, user)).thenReturn(Optional.of(task));
         when(collaboratorService.hasUserPermission(
                 eq(user),
                 eq(project),
@@ -176,7 +176,7 @@ class TaskServiceImplTest {
 
         assertThat(task.getStatus()).isEqualTo(TaskStatus.TODO);
 
-        verify(repository).findById(taskId);
+        verify(repository).findByIdAndProjectOwner(taskId, user);
         verify(collaboratorService).hasUserPermission(
                 user,
                 project,
@@ -192,7 +192,7 @@ class TaskServiceImplTest {
         AppUser user = new AppUser();
         UUID taskId = UUID.randomUUID();
 
-        when(repository.findById(taskId)).thenReturn(Optional.empty());
+        when(repository.findByIdAndProjectOwner(taskId, user)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> taskService.updateStatus(
                 taskId.toString(),
@@ -201,7 +201,7 @@ class TaskServiceImplTest {
         ))
                 .isInstanceOf(TaskNotFoundException.class);
 
-        verify(repository).findById(taskId);
+        verify(repository).findByIdAndProjectOwner(taskId, user);
         verifyNoInteractions(collaboratorService);
         verify(repository, never()).save(any());
         verifyNoInteractions(mappingService);
@@ -243,7 +243,7 @@ class TaskServiceImplTest {
         TaskResponseDto responseDto = mock(TaskResponseDto.class);
         TaskUpdateDto request = new TaskUpdateDto("Updated task title", "Updated task description");
 
-        when(repository.findById(taskId)).thenReturn(Optional.of(task));
+        when(repository.findByIdAndProjectOwner(taskId, user)).thenReturn(Optional.of(task));
         when(collaboratorService.hasUserPermission(
                 eq(user),
                 eq(project),
@@ -258,7 +258,7 @@ class TaskServiceImplTest {
         assertThat(task.getDescription()).isEqualTo("Updated task description");
         assertThat(result).isSameAs(responseDto);
 
-        verify(repository).findById(taskId);
+        verify(repository).findByIdAndProjectOwner(taskId, user);
         verify(collaboratorService).hasUserPermission(
                 user,
                 project,
@@ -283,7 +283,7 @@ class TaskServiceImplTest {
 
         TaskUpdateDto request = new TaskUpdateDto("Updated task title", "Updated task description");
 
-        when(repository.findById(taskId)).thenReturn(Optional.of(task));
+        when(repository.findByIdAndProjectOwner(taskId, user)).thenReturn(Optional.of(task));
         when(collaboratorService.hasUserPermission(
                 eq(user),
                 eq(project),
@@ -299,7 +299,7 @@ class TaskServiceImplTest {
         assertThat(task.getTitle()).isEqualTo("Old title");
         assertThat(task.getDescription()).isEqualTo("Old description");
 
-        verify(repository).findById(taskId);
+        verify(repository).findByIdAndProjectOwner(taskId, user);
         verify(collaboratorService).hasUserPermission(
                 user,
                 project,
@@ -316,12 +316,12 @@ class TaskServiceImplTest {
         UUID taskId = UUID.randomUUID();
         TaskUpdateDto request = new TaskUpdateDto("Updated task title", "Updated task description");
 
-        when(repository.findById(taskId)).thenReturn(Optional.empty());
+        when(repository.findByIdAndProjectOwner(taskId, user)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> taskService.update(taskId.toString(), request, user))
                 .isInstanceOf(TaskNotFoundException.class);
 
-        verify(repository).findById(taskId);
+        verify(repository).findByIdAndProjectOwner(taskId, user);
         verifyNoInteractions(collaboratorService);
         verify(repository, never()).save(any());
         verifyNoInteractions(mappingService);
