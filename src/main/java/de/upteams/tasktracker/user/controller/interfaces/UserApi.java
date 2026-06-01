@@ -1,8 +1,8 @@
 package de.upteams.tasktracker.user.controller.interfaces;
 
+import de.upteams.tasktracker.user.dto.request.ChangePasswordRequestDto;
 import de.upteams.tasktracker.user.dto.request.UserProfileUpdateDto;
 import de.upteams.tasktracker.user.dto.response.UserResponseDto;
-import de.upteams.tasktracker.user.dto.request.ChangePasswordRequestDto;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -43,7 +43,7 @@ public interface UserApi extends UserApiSwaggerDoc {
     );
 
     @Override
-    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<UserResponseDto> updateCurrentUserAvatar(
             @Parameter(
                     description = "Avatar image file. Supported types: JPEG, PNG, WEBP. Max size: 5 MB",
