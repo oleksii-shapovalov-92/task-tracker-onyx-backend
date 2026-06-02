@@ -225,7 +225,11 @@ class UserControllerMeTest {
         when(userService.updateCurrentUserAvatar(any(MultipartFile.class))).thenReturn(updatedUser);
 
         mockMvc.perform(multipart("/api/v1/users/me/avatar")
-                        .file(avatar))
+                        .file(avatar)
+                        .with(request -> {
+                            request.setMethod("PATCH");
+                            return request;
+                        }))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.displayName").value("Risen Cumin"))
                 .andExpect(jsonPath("$.position").value("Backend Developer"))
