@@ -15,12 +15,14 @@ import de.upteams.tasktracker.user.entity.AppUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository repository;
@@ -56,6 +58,21 @@ public class ProjectServiceImpl implements ProjectService {
 
         return repository
                 .findByIdAndOwner(projectId, authUser)
+                .orElseThrow(ProjectNotFoundException::new);
+    }
+
+    @Override
+    public Project getOrThrowById(String id) {
+        final UUID projectId;
+
+        try {
+            projectId = UUID.fromString(id);
+        } catch (IllegalArgumentException ex) {
+            throw new RestApiException(HttpStatus.BAD_REQUEST, "Invalid projectId format");
+        }
+
+        return repository
+                .findById(projectId)
                 .orElseThrow(ProjectNotFoundException::new);
     }
 

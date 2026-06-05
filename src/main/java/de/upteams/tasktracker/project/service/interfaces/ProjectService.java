@@ -19,6 +19,8 @@ public interface ProjectService {
 
     Project getOrTrow(String id, AppUser authUser);
 
+    Project getOrThrowById(String id);
+
     List<ProjectResponseDto> getAll(AppUser authUser);
 
     ProjectResponseDto update(
