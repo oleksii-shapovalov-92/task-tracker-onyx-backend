@@ -40,20 +40,23 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskResponseDto save(final TaskCreateDto newTaskDto, final AppUser authUser) {
-        final Project project = projectService.getOrTrow(newTaskDto.projectId(), authUser);
-        final boolean userInProject = collaboratorService.isUserInProject(authUser, project);
-        if (!userInProject) {
-            throw new RestApiException(HttpStatus.FORBIDDEN, "User has no access to this project");
-        }
+        final Project project = projectService.getOrThrowById(newTaskDto.projectId());
+
+        checkProjectAccess(authUser, project);
 
         final Task entity = mappingService.mapCreateDtoToEntity(newTaskDto);
         entity.setProject(project);
+
         return mappingService.mapEntityToDto(repository.save(entity));
     }
 
     @Override
     public TaskResponseDto getById(String id, AppUser authUser) {
-        return mappingService.mapEntityToDto(getOrThrow(id, authUser));
+        final Task task = getOrThrow(id, authUser);
+
+        checkProjectAccess(authUser, task.getProject());
+
+        return mappingService.mapEntityToDto(task);
     }
 
     @Override
@@ -72,17 +75,15 @@ public class TaskServiceImpl implements TaskService {
             throw new RestApiException(HttpStatus.BAD_REQUEST, "Invalid taskId format");
         }
 
-        return repository
-                .findByIdAndProjectOwner(taskId, authUser);
+        return repository.findById(taskId);
     }
 
     @Override
     public List<TaskResponseDto> getAll(final String projectId, final AppUser authUser) {
-        final Project project = projectService.getOrTrow(projectId, authUser);
-        boolean userInProject = collaboratorService.isUserInProject(authUser, project);
-        if (!userInProject) {
-            throw new RestApiException(HttpStatus.FORBIDDEN, "User has no access to this project");
-        }
+        final Project project = projectService.getOrThrowById(projectId);
+
+        checkProjectAccess(authUser, project);
+
         return repository
                 .findByProject(project)
                 .stream()
@@ -151,4 +152,11 @@ public class TaskServiceImpl implements TaskService {
         return mappingService.mapEntityToDto(repository.save(existedTask));
     }
 
+    private void checkProjectAccess(AppUser user, Project project) {
+        final boolean userInProject = collaboratorService.isUserInProject(user, project);
+
+        if (!userInProject) {
+            throw new RestApiException(HttpStatus.FORBIDDEN, "User has no access to this project");
+        }
+    }
 }

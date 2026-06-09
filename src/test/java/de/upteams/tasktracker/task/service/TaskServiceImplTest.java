@@ -14,6 +14,7 @@ import de.upteams.tasktracker.task.persistence.TaskRepository;
 import de.upteams.tasktracker.task.service.impl.TaskServiceImpl;
 import de.upteams.tasktracker.task.utils.TaskMappingService;
 import de.upteams.tasktracker.user.entity.AppUser;
+import de.upteams.tasktracker.task.dto.request.TaskCreateDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -88,13 +89,13 @@ class TaskServiceImplTest {
 
         String projectId = project.getId().toString();
 
-        when(projectService.getOrTrow(projectId, owner)).thenReturn(project);
+        when(projectService.getOrThrowById(projectId)).thenReturn(project);
         when(collaboratorService.isUserInProject(owner, project)).thenReturn(true);
         when(repository.findByProject(project)).thenReturn(List.of(task));
 
         taskService.getAll(projectId, owner);
 
-        verify(projectService).getOrTrow(projectId, owner);
+        verify(projectService).getOrThrowById(projectId);
         verify(collaboratorService).isUserInProject(owner, project);
         verify(repository).findByProject(project);
     }
@@ -115,7 +116,7 @@ class TaskServiceImplTest {
 
         TaskResponseDto responseDto = mock(TaskResponseDto.class);
 
-        when(repository.findByIdAndProjectOwner(taskId, user)).thenReturn(Optional.of(task));
+        when(repository.findById(taskId)).thenReturn(Optional.of(task));
         when(collaboratorService.hasUserPermission(
                 eq(user),
                 eq(project),
@@ -133,7 +134,7 @@ class TaskServiceImplTest {
         assertThat(task.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
         assertThat(result).isSameAs(responseDto);
 
-        verify(repository).findByIdAndProjectOwner(taskId, user);
+        verify(repository).findById(taskId);
         verify(collaboratorService).hasUserPermission(
                 user,
                 project,
@@ -157,7 +158,7 @@ class TaskServiceImplTest {
         setField(task, "id", taskId);
         task.setStatus(TaskStatus.TODO);
 
-        when(repository.findByIdAndProjectOwner(taskId, user)).thenReturn(Optional.of(task));
+        when(repository.findById(taskId)).thenReturn(Optional.of(task));
         when(collaboratorService.hasUserPermission(
                 eq(user),
                 eq(project),
@@ -176,7 +177,7 @@ class TaskServiceImplTest {
 
         assertThat(task.getStatus()).isEqualTo(TaskStatus.TODO);
 
-        verify(repository).findByIdAndProjectOwner(taskId, user);
+        verify(repository).findById(taskId);
         verify(collaboratorService).hasUserPermission(
                 user,
                 project,
@@ -192,7 +193,7 @@ class TaskServiceImplTest {
         AppUser user = new AppUser();
         UUID taskId = UUID.randomUUID();
 
-        when(repository.findByIdAndProjectOwner(taskId, user)).thenReturn(Optional.empty());
+        when(repository.findById(taskId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> taskService.updateStatus(
                 taskId.toString(),
@@ -201,7 +202,7 @@ class TaskServiceImplTest {
         ))
                 .isInstanceOf(TaskNotFoundException.class);
 
-        verify(repository).findByIdAndProjectOwner(taskId, user);
+        verify(repository).findById(taskId);
         verifyNoInteractions(collaboratorService);
         verify(repository, never()).save(any());
         verifyNoInteractions(mappingService);
@@ -243,7 +244,7 @@ class TaskServiceImplTest {
         TaskResponseDto responseDto = mock(TaskResponseDto.class);
         TaskUpdateDto request = new TaskUpdateDto("Updated task title", "Updated task description");
 
-        when(repository.findByIdAndProjectOwner(taskId, user)).thenReturn(Optional.of(task));
+        when(repository.findById(taskId)).thenReturn(Optional.of(task));
         when(collaboratorService.hasUserPermission(
                 eq(user),
                 eq(project),
@@ -258,7 +259,7 @@ class TaskServiceImplTest {
         assertThat(task.getDescription()).isEqualTo("Updated task description");
         assertThat(result).isSameAs(responseDto);
 
-        verify(repository).findByIdAndProjectOwner(taskId, user);
+        verify(repository).findById(taskId);
         verify(collaboratorService).hasUserPermission(
                 user,
                 project,
@@ -283,7 +284,7 @@ class TaskServiceImplTest {
 
         TaskUpdateDto request = new TaskUpdateDto("Updated task title", "Updated task description");
 
-        when(repository.findByIdAndProjectOwner(taskId, user)).thenReturn(Optional.of(task));
+        when(repository.findById(taskId)).thenReturn(Optional.of(task));
         when(collaboratorService.hasUserPermission(
                 eq(user),
                 eq(project),
@@ -299,7 +300,7 @@ class TaskServiceImplTest {
         assertThat(task.getTitle()).isEqualTo("Old title");
         assertThat(task.getDescription()).isEqualTo("Old description");
 
-        verify(repository).findByIdAndProjectOwner(taskId, user);
+        verify(repository).findById(taskId);
         verify(collaboratorService).hasUserPermission(
                 user,
                 project,
@@ -316,12 +317,12 @@ class TaskServiceImplTest {
         UUID taskId = UUID.randomUUID();
         TaskUpdateDto request = new TaskUpdateDto("Updated task title", "Updated task description");
 
-        when(repository.findByIdAndProjectOwner(taskId, user)).thenReturn(Optional.empty());
+        when(repository.findById(taskId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> taskService.update(taskId.toString(), request, user))
                 .isInstanceOf(TaskNotFoundException.class);
 
-        verify(repository).findByIdAndProjectOwner(taskId, user);
+        verify(repository).findById(taskId);
         verifyNoInteractions(collaboratorService);
         verify(repository, never()).save(any());
         verifyNoInteractions(mappingService);
@@ -342,5 +343,80 @@ class TaskServiceImplTest {
         verifyNoInteractions(repository);
         verifyNoInteractions(collaboratorService);
         verifyNoInteractions(mappingService);
+    }
+
+    @Test
+    @DisplayName("Should create task with project when user has access to project")
+    void shouldCreateTaskWithProjectWhenUserHasAccessToProject() {
+        AppUser user = new AppUser();
+        setField(user, "id", UUID.randomUUID());
+
+        Project project = new Project();
+        setField(project, "id", UUID.randomUUID());
+        project.setOwner(user);
+
+        TaskCreateDto request = new TaskCreateDto(
+                "Task title",
+                "Task description",
+                project.getId().toString()
+        );
+
+        Task task = new Task();
+        task.setTitle(request.title());
+        task.setDescription(request.description());
+
+        Task savedTask = new Task();
+        savedTask.setTitle(request.title());
+        savedTask.setDescription(request.description());
+        savedTask.setProject(project);
+
+        TaskResponseDto responseDto = mock(TaskResponseDto.class);
+
+        when(projectService.getOrThrowById(project.getId().toString())).thenReturn(project);
+        when(collaboratorService.isUserInProject(user, project)).thenReturn(true);
+        when(mappingService.mapCreateDtoToEntity(request)).thenReturn(task);
+        when(repository.save(task)).thenReturn(savedTask);
+        when(mappingService.mapEntityToDto(savedTask)).thenReturn(responseDto);
+
+        TaskResponseDto result = taskService.save(request, user);
+
+        assertThat(task.getProject()).isEqualTo(project);
+        assertThat(result).isSameAs(responseDto);
+
+        verify(projectService).getOrThrowById(project.getId().toString());
+        verify(collaboratorService).isUserInProject(user, project);
+        verify(mappingService).mapCreateDtoToEntity(request);
+        verify(repository).save(task);
+        verify(mappingService).mapEntityToDto(savedTask);
+    }
+
+    @Test
+    @DisplayName("Should throw forbidden when creating task without project access")
+    void shouldThrowForbiddenWhenCreatingTaskWithoutProjectAccess() {
+        AppUser user = new AppUser();
+        setField(user, "id", UUID.randomUUID());
+
+        Project project = new Project();
+        setField(project, "id", UUID.randomUUID());
+
+        TaskCreateDto request = new TaskCreateDto(
+                "Task title",
+                "Task description",
+                project.getId().toString()
+        );
+
+        when(projectService.getOrThrowById(project.getId().toString())).thenReturn(project);
+        when(collaboratorService.isUserInProject(user, project)).thenReturn(false);
+
+        assertThatThrownBy(() -> taskService.save(request, user))
+                .isInstanceOfSatisfying(RestApiException.class, ex -> {
+                    assertThat(ex.getHttpStatus()).isEqualTo(HttpStatus.FORBIDDEN);
+                    assertThat(ex.getMessage()).isEqualTo("User has no access to this project");
+                });
+
+        verify(projectService).getOrThrowById(project.getId().toString());
+        verify(collaboratorService).isUserInProject(user, project);
+        verifyNoInteractions(mappingService);
+        verify(repository, never()).save(any());
     }
 }

@@ -42,7 +42,6 @@ public class Task extends BaseEntity {
     )
     private String description;
 
-    // ✅ ВОТ ОНО — статус
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
