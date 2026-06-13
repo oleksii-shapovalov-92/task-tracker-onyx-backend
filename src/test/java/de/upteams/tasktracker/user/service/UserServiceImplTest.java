@@ -405,7 +405,7 @@ class UserServiceImplTest {
         assertThatThrownBy(() -> userService.updateCurrentUserAvatar(multipartFile))
                 .isInstanceOfSatisfying(RestApiException.class, ex -> {
                     assertThat(ex.getHttpStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-                    assertThat(ex.getMessage()).isEqualTo("Failed to upload avatar");
+                    assertThat(ex.getMessage()).isEqualTo("Avatar upload failed. Please check storage configuration");
                 });
     }
 

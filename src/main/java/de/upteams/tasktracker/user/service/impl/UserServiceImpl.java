@@ -20,6 +20,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import lombok.extern.slf4j.Slf4j;
+
 
 import java.io.IOException;
 import java.util.List;
@@ -30,6 +32,7 @@ import java.util.UUID;
 /**
  * Service for various operations with Employees
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -55,25 +58,18 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public AppUser getByEmailOrThrow(String email) {
-        return getByEmail(email)
-                .orElseThrow(UserNotFoundException::new);
+        return getByEmail(email).orElseThrow(UserNotFoundException::new);
     }
 
     @Override
     @Transactional
     public AppUser getByIdOrThrow(String id) {
-        return repository
-                .findById(UUID.fromString(id))
-                .orElseThrow(UserNotFoundException::new);
+        return repository.findById(UUID.fromString(id)).orElseThrow(UserNotFoundException::new);
     }
 
     @Override
     public List<UserResponseDto> getAll() {
-        return repository
-                .findAll()
-                .stream()
-                .map(mappingService::mapEntityToDto)
-                .toList();
+        return repository.findAll().stream().map(mappingService::mapEntityToDto).toList();
     }
 
     @Override
@@ -112,6 +108,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponseDto updateCurrentUserAvatar(MultipartFile file) {
         validateAvatarFile(file);
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         AppUser user = getByEmailOrThrow(email);
@@ -119,21 +116,29 @@ public class UserServiceImpl implements UserService {
         String objectKey = buildAvatarObjectKey(user, file);
 
         try {
-            boolean uploaded = fileService.uploadFileAsync(
-                    objectKey,
-                    file.getInputStream(),
-                    Map.of("userId", user.getId().toString()),
-                    file.getContentType(),
-                    file.getSize(),
-                    true
-            ).join();
+            boolean uploaded = fileService.uploadFileAsync(objectKey, file.getInputStream(), Map.of("userId", user.getId().toString()), file.getContentType(), file.getSize(), true).join();
+
             if (!uploaded) {
-                throw new RestApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to upload avatar");
+                log.error("Avatar upload failed. Storage returned false. userId={}, objectKey={}, contentType={}, size={}", user.getId(), objectKey, file.getContentType(), file.getSize());
+
+                throw new RestApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Avatar upload failed. Please check storage configuration");
             }
+
             user.setAvatarUrl(buildPublicAvatarUrl(objectKey));
             return mapToUserResponseDto(user);
+
         } catch (IOException e) {
+            log.error("Failed to read avatar file. userId={}, objectKey={}", user.getId(), objectKey, e);
+
             throw new RestApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to read avatar file");
+
+        } catch (RestApiException e) {
+            throw e;
+
+        } catch (RuntimeException e) {
+            log.error("Avatar upload failed due to storage error. userId={}, objectKey={}, contentType={}, size={}", user.getId(), objectKey, file.getContentType(), file.getSize(), e);
+
+            throw new RestApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Avatar upload failed. Please check DigitalOcean Spaces configuration");
         }
     }
 
@@ -154,9 +159,7 @@ public class UserServiceImpl implements UserService {
         String extension = extractExtension(file.getOriginalFilename());
         String fileName = UUID.randomUUID() + extension;
 
-        return UserValidationConstants.AVATAR_OBJECT_KEY_PREFIX
-                + "/" + user.getId()
-                + "/" + fileName;
+        return UserValidationConstants.AVATAR_OBJECT_KEY_PREFIX + "/" + user.getId() + "/" + fileName;
     }
 
     private String extractExtension(String originalFileName) {
@@ -180,16 +183,7 @@ public class UserServiceImpl implements UserService {
 
 
     private UserResponseDto mapToUserResponseDto(AppUser user) {
-        return new UserResponseDto(
-                user.getDisplayName(),
-                user.getPosition(),
-                user.getDepartment(),
-                user.getAvatarUrl(),
-                user.getBio(),
-                user.getEmail(),
-                user.getRole().name(),
-                user.getConfirmationStatus()
-        );
+        return new UserResponseDto(user.getDisplayName(), user.getPosition(), user.getDepartment(), user.getAvatarUrl(), user.getBio(), user.getEmail(), user.getRole().name(), user.getConfirmationStatus());
     }
 
     @Override
@@ -200,16 +194,10 @@ public class UserServiceImpl implements UserService {
 
         AppUser user = getByEmailOrThrow(email);
 
-        boolean currentPasswordMatches = passwordEncoder.matches(
-                request.currentPassword(),
-                user.getPassword()
-        );
+        boolean currentPasswordMatches = passwordEncoder.matches(request.currentPassword(), user.getPassword());
 
         if (!currentPasswordMatches) {
-            throw new RestApiException(
-                    HttpStatus.BAD_REQUEST,
-                    "Current password is incorrect"
-            );
+            throw new RestApiException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
         }
 
         String encodedNewPassword = passwordEncoder.encode(request.newPassword());
