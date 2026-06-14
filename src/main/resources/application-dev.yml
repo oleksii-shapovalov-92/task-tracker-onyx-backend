@@ -46,6 +46,10 @@ confirmation:
 app:
   base-url: ${BASE_URL:http://localhost:8080}
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  storage:
+    type: ${APP_STORAGE_TYPE:local}
+    local:
+      upload-dir: ${APP_LOCAL_UPLOAD_DIR:uploads}
 
 cookie:
   secure: ${APP_COOKIE_SECURE:false}
@@ -57,7 +61,7 @@ digitalocean:
     endpoint: ${DO_SPACES_ENDPOINT:https://fra1.digitaloceanspaces.com}
     region: ${DO_SPACES_REGION:fra1}
     bucket-name: ${DO_SPACES_BUCKET:test-bucket}
-    public-base-url: ${DO_SPACES_PUBLIC_BASE_URL:https://test-bucket.fra1.digitaloceanspaces.com}
+    public-base-url: ${DO_SPACES_PUBLIC_BASE_URL:http://localhost:8080/uploads}
 
 
 # 2 hours = 120 min
