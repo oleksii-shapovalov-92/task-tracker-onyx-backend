@@ -10,6 +10,7 @@ import de.upteams.tasktracker.task.dto.response.TaskResponseDto;
 import de.upteams.tasktracker.task.entity.Task;
 import de.upteams.tasktracker.task.entity.TaskStatus;
 import de.upteams.tasktracker.task.exception.TaskNotFoundException;
+import de.upteams.tasktracker.project.exception.ProjectNotFoundException;
 import de.upteams.tasktracker.task.persistence.TaskRepository;
 import de.upteams.tasktracker.task.service.impl.TaskServiceImpl;
 import de.upteams.tasktracker.task.utils.TaskMappingService;
@@ -117,6 +118,7 @@ class TaskServiceImplTest {
         TaskResponseDto responseDto = mock(TaskResponseDto.class);
 
         when(repository.findById(taskId)).thenReturn(Optional.of(task));
+        when(collaboratorService.isUserInProject(user, project)).thenReturn(true);
         when(collaboratorService.hasUserPermission(
                 eq(user),
                 eq(project),
@@ -135,6 +137,7 @@ class TaskServiceImplTest {
         assertThat(result).isSameAs(responseDto);
 
         verify(repository).findById(taskId);
+        verify(collaboratorService).isUserInProject(user, project);
         verify(collaboratorService).hasUserPermission(
                 user,
                 project,
@@ -145,8 +148,8 @@ class TaskServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should throw forbidden when user has no access to project during status update")
-    void shouldThrowForbiddenWhenUserHasNoAccessToProjectDuringStatusUpdate() {
+    @DisplayName("Should throw forbidden when project member has no permission during status update")
+    void shouldThrowForbiddenWhenProjectMemberHasNoPermissionDuringStatusUpdate() {
         AppUser user = new AppUser();
         setField(user, "id", UUID.randomUUID());
 
@@ -159,6 +162,7 @@ class TaskServiceImplTest {
         task.setStatus(TaskStatus.TODO);
 
         when(repository.findById(taskId)).thenReturn(Optional.of(task));
+        when(collaboratorService.isUserInProject(user, project)).thenReturn(true);
         when(collaboratorService.hasUserPermission(
                 eq(user),
                 eq(project),
@@ -178,6 +182,7 @@ class TaskServiceImplTest {
         assertThat(task.getStatus()).isEqualTo(TaskStatus.TODO);
 
         verify(repository).findById(taskId);
+        verify(collaboratorService).isUserInProject(user, project);
         verify(collaboratorService).hasUserPermission(
                 user,
                 project,
@@ -245,6 +250,7 @@ class TaskServiceImplTest {
         TaskUpdateDto request = new TaskUpdateDto("Updated task title", "Updated task description");
 
         when(repository.findById(taskId)).thenReturn(Optional.of(task));
+        when(collaboratorService.isUserInProject(user, project)).thenReturn(true);
         when(collaboratorService.hasUserPermission(
                 eq(user),
                 eq(project),
@@ -260,6 +266,7 @@ class TaskServiceImplTest {
         assertThat(result).isSameAs(responseDto);
 
         verify(repository).findById(taskId);
+        verify(collaboratorService).isUserInProject(user, project);
         verify(collaboratorService).hasUserPermission(
                 user,
                 project,
@@ -270,8 +277,8 @@ class TaskServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should throw forbidden when user has no access to project during task update")
-    void shouldThrowForbiddenWhenUserHasNoAccessToProjectDuringTaskUpdate() {
+    @DisplayName("Should throw forbidden when project member has no permission during task update")
+    void shouldThrowForbiddenWhenProjectMemberHasNoPermissionDuringTaskUpdate() {
         AppUser user = new AppUser();
         setField(user, "id", UUID.randomUUID());
 
@@ -285,6 +292,7 @@ class TaskServiceImplTest {
         TaskUpdateDto request = new TaskUpdateDto("Updated task title", "Updated task description");
 
         when(repository.findById(taskId)).thenReturn(Optional.of(task));
+        when(collaboratorService.isUserInProject(user, project)).thenReturn(true);
         when(collaboratorService.hasUserPermission(
                 eq(user),
                 eq(project),
@@ -301,6 +309,7 @@ class TaskServiceImplTest {
         assertThat(task.getDescription()).isEqualTo("Old description");
 
         verify(repository).findById(taskId);
+        verify(collaboratorService).isUserInProject(user, project);
         verify(collaboratorService).hasUserPermission(
                 user,
                 project,
@@ -374,6 +383,11 @@ class TaskServiceImplTest {
 
         when(projectService.getOrThrowById(project.getId().toString())).thenReturn(project);
         when(collaboratorService.isUserInProject(user, project)).thenReturn(true);
+        when(collaboratorService.hasUserPermission(
+                eq(user),
+                eq(project),
+                eq(List.of(ProjectRoles.MEMBER, ProjectRoles.OWNER, ProjectRoles.ADMIN))
+        )).thenReturn(true);
         when(mappingService.mapCreateDtoToEntity(request)).thenReturn(task);
         when(repository.save(task)).thenReturn(savedTask);
         when(mappingService.mapEntityToDto(savedTask)).thenReturn(responseDto);
@@ -385,14 +399,19 @@ class TaskServiceImplTest {
 
         verify(projectService).getOrThrowById(project.getId().toString());
         verify(collaboratorService).isUserInProject(user, project);
+        verify(collaboratorService).hasUserPermission(
+                user,
+                project,
+                List.of(ProjectRoles.MEMBER, ProjectRoles.OWNER, ProjectRoles.ADMIN)
+        );
         verify(mappingService).mapCreateDtoToEntity(request);
         verify(repository).save(task);
         verify(mappingService).mapEntityToDto(savedTask);
     }
 
     @Test
-    @DisplayName("Should throw forbidden when creating task without project access")
-    void shouldThrowForbiddenWhenCreatingTaskWithoutProjectAccess() {
+    @DisplayName("Should throw project not found when creating task without project access")
+    void shouldThrowProjectNotFoundWhenCreatingTaskWithoutProjectAccess() {
         AppUser user = new AppUser();
         setField(user, "id", UUID.randomUUID());
 
@@ -409,6 +428,39 @@ class TaskServiceImplTest {
         when(collaboratorService.isUserInProject(user, project)).thenReturn(false);
 
         assertThatThrownBy(() -> taskService.save(request, user))
+                .isInstanceOf(ProjectNotFoundException.class);
+
+        verify(projectService).getOrThrowById(project.getId().toString());
+        verify(collaboratorService).isUserInProject(user, project);
+        verify(collaboratorService, never()).hasUserPermission(any(), any(), anyCollection());
+        verifyNoInteractions(mappingService);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should throw forbidden when project member has no permission to create task")
+    void shouldThrowForbiddenWhenProjectMemberHasNoPermissionToCreateTask() {
+        AppUser user = new AppUser();
+        setField(user, "id", UUID.randomUUID());
+
+        Project project = new Project();
+        setField(project, "id", UUID.randomUUID());
+
+        TaskCreateDto request = new TaskCreateDto(
+                "Task title",
+                "Task description",
+                project.getId().toString()
+        );
+
+        when(projectService.getOrThrowById(project.getId().toString())).thenReturn(project);
+        when(collaboratorService.isUserInProject(user, project)).thenReturn(true);
+        when(collaboratorService.hasUserPermission(
+                eq(user),
+                eq(project),
+                eq(List.of(ProjectRoles.MEMBER, ProjectRoles.OWNER, ProjectRoles.ADMIN))
+        )).thenReturn(false);
+
+        assertThatThrownBy(() -> taskService.save(request, user))
                 .isInstanceOfSatisfying(RestApiException.class, ex -> {
                     assertThat(ex.getHttpStatus()).isEqualTo(HttpStatus.FORBIDDEN);
                     assertThat(ex.getMessage()).isEqualTo("User has no access to this project");
@@ -416,7 +468,127 @@ class TaskServiceImplTest {
 
         verify(projectService).getOrThrowById(project.getId().toString());
         verify(collaboratorService).isUserInProject(user, project);
+        verify(collaboratorService).hasUserPermission(
+                user,
+                project,
+                List.of(ProjectRoles.MEMBER, ProjectRoles.OWNER, ProjectRoles.ADMIN)
+        );
         verifyNoInteractions(mappingService);
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should throw project not found when loading tasks for foreign project")
+    void shouldThrowProjectNotFoundWhenLoadingTasksForForeignProject() {
+        AppUser user = new AppUser();
+        setField(user, "id", UUID.randomUUID());
+
+        AppUser owner = new AppUser();
+        setField(owner, "id", UUID.randomUUID());
+
+        Project project = new Project();
+        setField(project, "id", UUID.randomUUID());
+        project.setOwner(owner);
+
+        String projectId = project.getId().toString();
+
+        when(projectService.getOrThrowById(projectId)).thenReturn(project);
+        when(collaboratorService.isUserInProject(user, project)).thenReturn(false);
+
+        assertThatThrownBy(() -> taskService.getAll(projectId, user))
+                .isInstanceOf(ProjectNotFoundException.class);
+
+        verify(projectService).getOrThrowById(projectId);
+        verify(collaboratorService).isUserInProject(user, project);
+        verifyNoInteractions(repository);
+        verifyNoInteractions(mappingService);
+    }
+
+    @Test
+    @DisplayName("Should throw task not found when loading task from foreign project")
+    void shouldThrowTaskNotFoundWhenLoadingTaskFromForeignProject() {
+        AppUser user = new AppUser();
+        setField(user, "id", UUID.randomUUID());
+
+        Project project = new Project();
+        setField(project, "id", UUID.randomUUID());
+
+        Task task = new Task("Test task", "Test task description", project);
+        UUID taskId = UUID.randomUUID();
+        setField(task, "id", taskId);
+
+        when(repository.findById(taskId)).thenReturn(Optional.of(task));
+        when(collaboratorService.isUserInProject(user, project)).thenReturn(false);
+
+        assertThatThrownBy(() -> taskService.getById(taskId.toString(), user))
+                .isInstanceOf(TaskNotFoundException.class);
+
+        verify(repository).findById(taskId);
+        verify(collaboratorService).isUserInProject(user, project);
+        verifyNoInteractions(mappingService);
+    }
+
+    @Test
+    @DisplayName("Should throw task not found when updating status of task from foreign project")
+    void shouldThrowTaskNotFoundWhenUpdatingStatusOfTaskFromForeignProject() {
+        AppUser user = new AppUser();
+        setField(user, "id", UUID.randomUUID());
+
+        Project project = new Project();
+        setField(project, "id", UUID.randomUUID());
+
+        Task task = new Task("Test task", "Test task description", project);
+        UUID taskId = UUID.randomUUID();
+        setField(task, "id", taskId);
+        task.setStatus(TaskStatus.TODO);
+
+        when(repository.findById(taskId)).thenReturn(Optional.of(task));
+        when(collaboratorService.isUserInProject(user, project)).thenReturn(false);
+
+        assertThatThrownBy(() -> taskService.updateStatus(
+                taskId.toString(),
+                TaskStatus.IN_PROGRESS,
+                user
+        ))
+                .isInstanceOf(TaskNotFoundException.class);
+
+        assertThat(task.getStatus()).isEqualTo(TaskStatus.TODO);
+
+        verify(repository).findById(taskId);
+        verify(collaboratorService).isUserInProject(user, project);
+        verify(collaboratorService, never()).hasUserPermission(any(), any(), anyCollection());
+        verify(repository, never()).save(any());
+        verifyNoInteractions(mappingService);
+    }
+
+    @Test
+    @DisplayName("Should throw task not found when updating task from foreign project")
+    void shouldThrowTaskNotFoundWhenUpdatingTaskFromForeignProject() {
+        AppUser user = new AppUser();
+        setField(user, "id", UUID.randomUUID());
+
+        Project project = new Project();
+        setField(project, "id", UUID.randomUUID());
+
+        Task task = new Task("Old title", "Old description", project);
+        UUID taskId = UUID.randomUUID();
+        setField(task, "id", taskId);
+
+        TaskUpdateDto request = new TaskUpdateDto("Updated task title", "Updated task description");
+
+        when(repository.findById(taskId)).thenReturn(Optional.of(task));
+        when(collaboratorService.isUserInProject(user, project)).thenReturn(false);
+
+        assertThatThrownBy(() -> taskService.update(taskId.toString(), request, user))
+                .isInstanceOf(TaskNotFoundException.class);
+
+        assertThat(task.getTitle()).isEqualTo("Old title");
+        assertThat(task.getDescription()).isEqualTo("Old description");
+
+        verify(repository).findById(taskId);
+        verify(collaboratorService).isUserInProject(user, project);
+        verify(collaboratorService, never()).hasUserPermission(any(), any(), anyCollection());
+        verify(repository, never()).save(any());
+        verifyNoInteractions(mappingService);
     }
 }
