@@ -53,7 +53,7 @@ public interface TaskApi {
                                     ]
                                     """))
             ),
-            @ApiResponse(responseCode = "403", description = "Forbidden - user has no access to the project",
+            @ApiResponse(responseCode = "403", description = "Forbidden - user is project member but has no permission to create tasks",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class),
                             examples = @ExampleObject(value = """
@@ -66,7 +66,7 @@ public interface TaskApi {
                                     }
                                     """))
             ),
-            @ApiResponse(responseCode = "404", description = "Project not found",
+            @ApiResponse(responseCode = "404", description = "Project not found or hidden",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class),
                             examples = @ExampleObject(value = """
@@ -111,7 +111,7 @@ public interface TaskApi {
                                     }
                                     """)))
             ,
-            @ApiResponse(responseCode = "404", description = "Task not found",
+            @ApiResponse(responseCode = "404", description = "Task not found or hidden",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class),
                             examples = @ExampleObject(value = """
@@ -154,11 +154,7 @@ public interface TaskApi {
                                     }
                                     """)))
             ,
-            @ApiResponse(responseCode = "403", description = "Forbidden - user has no access to the project",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponseDto.class))
-            ),
-            @ApiResponse(responseCode = "404", description = "Project not found",
+            @ApiResponse(responseCode = "404", description = "Project not found or hidden",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class),
                             examples = @ExampleObject(value = """
@@ -198,11 +194,11 @@ public interface TaskApi {
                                     }
                                     """)))
             ,
-            @ApiResponse(responseCode = "404", description = "Task not found",
+            @ApiResponse(responseCode = "404", description = "Task not found or hidden",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class)))
             ,
-            @ApiResponse(responseCode = "403", description = "Forbidden - user has no access to the project",
+            @ApiResponse(responseCode = "403", description = "Forbidden - user is project member but has no permission to delete tasks",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class)))
     })
@@ -240,11 +236,11 @@ public interface TaskApi {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class))
             ),
-            @ApiResponse(responseCode = "403", description = "Forbidden - user has no access to the project",
+            @ApiResponse(responseCode = "403", description = "Forbidden - user is project member but has no permission to update task status",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class))
             ),
-            @ApiResponse(responseCode = "404", description = "Task not found",
+            @ApiResponse(responseCode = "404", description = "Task not found or hidden",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class))
             )
@@ -273,11 +269,11 @@ public interface TaskApi {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class))
             ),
-            @ApiResponse(responseCode = "403", description = "Forbidden - user has no access to the project",
+            @ApiResponse(responseCode = "403", description = "Forbidden - user is project member but has no permission to update tasks",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class))
             ),
-            @ApiResponse(responseCode = "404", description = "Task not found",
+            @ApiResponse(responseCode = "404", description = "Task not found or hidden",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponseDto.class))
             )
