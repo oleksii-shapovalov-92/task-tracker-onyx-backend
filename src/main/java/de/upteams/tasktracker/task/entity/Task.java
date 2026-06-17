@@ -3,6 +3,7 @@ package de.upteams.tasktracker.task.entity;
 import de.upteams.tasktracker.collaborator.entity.Collaborator;
 import de.upteams.tasktracker.project.entity.Project;
 import de.upteams.tasktracker.utils.BaseEntity;
+import de.upteams.tasktracker.task.constants.TaskValidationConstats;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -30,15 +31,15 @@ public class Task extends BaseEntity {
     @NotBlank
     @Column(name = "title", nullable = false)
     @Pattern(
-            regexp = "[A-Z][a-zA-Z1-9 ]{2,}",
-            message = "Task title should be at least 3 character length and start with capital letter"
+            regexp = TaskValidationConstats.TITLE_REGEX,
+            message = TaskValidationConstats.TITLE_MESSAGE
     )
     private String title;
 
     @Column(name = "description")
     @Pattern(
-            regexp = "[A-Z][a-zA-Z1-9,.%:?&!$;*() ]{2,}",
-            message = "Task description should be at least 3 character length and start with capital letter"
+            regexp = TaskValidationConstats.DESCRIPTION_REGEX,
+            message = TaskValidationConstats.DESCRIPTION_MESSAGE
     )
     private String description;
 
