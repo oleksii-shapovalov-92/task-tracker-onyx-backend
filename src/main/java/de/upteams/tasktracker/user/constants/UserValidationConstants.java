@@ -19,4 +19,5 @@ public final class UserValidationConstants {
     public static final long AVATAR_MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024L;
     public static final String AVATAR_OBJECT_KEY_PREFIX = "avatars";
     public static final Set<String> ALLOWED_AVATAR_CONTENT_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
+    public static final String NON_BLANK_IF_PRESENT_REGEX = "^[\\s\\S]*\\S[\\s\\S]*$";
 }

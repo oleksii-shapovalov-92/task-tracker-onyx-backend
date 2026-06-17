@@ -225,8 +225,8 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should clear profile fields when request values are blank")
-    void shouldClearProfileFieldsWhenRequestValuesAreBlank() {
+    @DisplayName("Should reject blank profile fields")
+    void shouldRejectBlankProfileFields() {
         AppUser user = new AppUser("encoded-password", "risen.cumin.22@icloud.com");
         user.setRole(Role.ROLE_USER);
         user.setConfirmationStatus(ConfirmationStatus.CONFIRMED);
@@ -234,13 +234,12 @@ class UserServiceImplTest {
         user.setPosition("Current Position");
         user.setDepartment("Current Department");
         user.setBio("Current bio");
-        user.setAvatarUrl(null);
 
         UserProfileUpdateDto request = new UserProfileUpdateDto(
                 "   ",
-                "",
-                "   ",
-                ""
+                null,
+                null,
+                null
         );
 
         SecurityContextHolder.getContext().setAuthentication(
@@ -250,15 +249,16 @@ class UserServiceImplTest {
         when(repository.findByEmailIgnoreCase("risen.cumin.22@icloud.com"))
                 .thenReturn(Optional.of(user));
 
-        UserResponseDto result = userService.updateCurrentUserProfile(request);
+        assertThatThrownBy(() -> userService.updateCurrentUserProfile(request))
+                .isInstanceOfSatisfying(RestApiException.class, ex -> {
+                    assertThat(ex.getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(ex.getMessage()).isEqualTo("Display name cannot be blank");
+                });
 
-        assertThat(result.displayName()).isEmpty();
-        assertThat(result.position()).isEmpty();
-        assertThat(result.department()).isEmpty();
-        assertThat(result.bio()).isEmpty();
-        assertThat(result.email()).isEqualTo("risen.cumin.22@icloud.com");
-        assertThat(result.role()).isEqualTo("ROLE_USER");
-        assertThat(result.confirmationStatus()).isEqualTo(ConfirmationStatus.CONFIRMED);
+        assertThat(user.getDisplayName()).isEqualTo("Current Name");
+        assertThat(user.getPosition()).isEqualTo("Current Position");
+        assertThat(user.getDepartment()).isEqualTo("Current Department");
+        assertThat(user.getBio()).isEqualTo("Current bio");
     }
 
     @Test

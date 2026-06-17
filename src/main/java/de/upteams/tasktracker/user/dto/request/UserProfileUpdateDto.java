@@ -2,14 +2,19 @@ package de.upteams.tasktracker.user.dto.request;
 
 import de.upteams.tasktracker.user.constants.UserValidationConstants;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
  * Request DTO for partial update of the current user's profile.
- * Null fields are treated as unchanged. Empty strings clear the value.
+ * Null fields are treated as unchanged. Blank strings are invalid.
  */
 public record UserProfileUpdateDto(
 
+        @Pattern(
+                regexp = UserValidationConstants.NON_BLANK_IF_PRESENT_REGEX,
+                message = "{user.displayName.notBlank}"
+        )
         @Size(max = UserValidationConstants.DISPLAY_NAME_MAX_LENGTH,
                 message = "{user.displayName.size}")
         @Schema(
@@ -18,6 +23,10 @@ public record UserProfileUpdateDto(
         )
         String displayName,
 
+        @Pattern(
+                regexp = UserValidationConstants.NON_BLANK_IF_PRESENT_REGEX,
+                message = "{user.position.notBlank}"
+        )
         @Size(max = UserValidationConstants.POSITION_MAX_LENGTH,
                 message = "{user.position.size}")
         @Schema(
@@ -26,6 +35,10 @@ public record UserProfileUpdateDto(
         )
         String position,
 
+        @Pattern(
+                regexp = UserValidationConstants.NON_BLANK_IF_PRESENT_REGEX,
+                message = "{user.department.notBlank}"
+        )
         @Size(max = UserValidationConstants.DEPARTMENT_MAX_LENGTH,
                 message = "{user.department.size}")
         @Schema(
@@ -34,6 +47,10 @@ public record UserProfileUpdateDto(
         )
         String department,
 
+        @Pattern(
+                regexp = UserValidationConstants.NON_BLANK_IF_PRESENT_REGEX,
+                message = "{user.bio.notBlank}"
+        )
         @Size(max = UserValidationConstants.BIO_MAX_LENGTH,
                 message = "{user.bio.size}")
         @Schema(
@@ -41,6 +58,5 @@ public record UserProfileUpdateDto(
                 example = "Java developer with QA experience"
         )
         String bio
-
 ) {
 }

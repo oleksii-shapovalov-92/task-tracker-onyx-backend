@@ -301,4 +301,55 @@ class UserControllerMeTest {
 
         verifyNoInteractions(userService);
     }
+
+    @Test
+    @DisplayName("Should return bad request when profile fields are blank")
+    void shouldReturnBadRequestWhenProfileFieldsAreBlank() throws Exception {
+        String requestBody = """
+                {
+                  "displayName": "",
+                  "position": "   ",
+                  "department": "",
+                  "bio": "   "
+                }
+                """;
+
+        mockMvc.perform(patch("/api/v1/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Validation failed for one or more fields"));
+    }
+
+    @Test
+    @DisplayName("Should update current user avatar via POST")
+    void shouldUpdateCurrentUserAvatarViaPost() throws Exception {
+        MockMultipartFile avatar = new MockMultipartFile(
+                "file",
+                "avatar.png",
+                "image/png",
+                "avatar-content".getBytes()
+        );
+
+        UserResponseDto updatedUser = new UserResponseDto(
+                "Risen Cumin",
+                "Backend Developer",
+                "Platform",
+                "http://localhost:8080/uploads/avatars/user-id/avatar.png",
+                "Working on avatar upload",
+                "risen.cumin.22@icloud.com",
+                "ROLE_USER",
+                ConfirmationStatus.CONFIRMED
+        );
+
+        when(userService.updateCurrentUserAvatar(any(MultipartFile.class))).thenReturn(updatedUser);
+
+        mockMvc.perform(multipart("/api/v1/users/me/avatar")
+                        .file(avatar))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.avatarUrl")
+                        .value("http://localhost:8080/uploads/avatars/user-id/avatar.png"));
+    }
 }
