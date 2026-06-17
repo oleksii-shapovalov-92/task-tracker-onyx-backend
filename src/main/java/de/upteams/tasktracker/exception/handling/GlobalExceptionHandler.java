@@ -13,6 +13,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -87,6 +89,42 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponseDto> handleConstraintViolationException(
+            ConstraintViolationException ex,
+            HttpServletRequest request
+    ) {
+        List<ValidationErrorDto> validationErrors = ex.getConstraintViolations()
+                .stream()
+                .map(violation -> new ValidationErrorDto(
+                        extractFieldName(violation),
+                        List.of(violation.getMessage())
+                ))
+                .toList();
+
+        ErrorResponseDto errorResponse = new ErrorResponseDto(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "Validation failed for one or more fields",
+                validationErrors,
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    private String extractFieldName(ConstraintViolation<?> violation) {
+        String propertyPath = violation.getPropertyPath().toString();
+        int lastDotIndex = propertyPath.lastIndexOf('.');
+
+        if (lastDotIndex == -1) {
+            return propertyPath;
+        }
+
+        return propertyPath.substring(lastDotIndex + 1);
     }
 
     private FieldError selectHigherPriorityFieldError(
