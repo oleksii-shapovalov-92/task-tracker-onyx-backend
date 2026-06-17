@@ -89,17 +89,22 @@ public class UserServiceImpl implements UserService {
         String email = authentication.getName();
         AppUser user = getByEmailOrThrow(email);
 
-        if (userProfileUpdateDto.displayName() != null) {
-            user.setDisplayName(userProfileUpdateDto.displayName().trim());
+        String displayName = trimProfileField(userProfileUpdateDto.displayName(), "Display name");
+        String position = trimProfileField(userProfileUpdateDto.position(), "Position");
+        String department = trimProfileField(userProfileUpdateDto.department(), "Department");
+        String bio = trimProfileField(userProfileUpdateDto.bio(), "Biography");
+
+        if (displayName != null) {
+            user.setDisplayName(displayName);
         }
-        if (userProfileUpdateDto.position() != null) {
-            user.setPosition(userProfileUpdateDto.position().trim());
+        if (position != null) {
+            user.setPosition(position);
         }
-        if (userProfileUpdateDto.department() != null) {
-            user.setDepartment(userProfileUpdateDto.department().trim());
+        if (department != null) {
+            user.setDepartment(department);
         }
-        if (userProfileUpdateDto.bio() != null) {
-            user.setBio(userProfileUpdateDto.bio().trim());
+        if (bio != null) {
+            user.setBio(bio);
         }
         return mapToUserResponseDto(user);
     }
@@ -202,5 +207,18 @@ public class UserServiceImpl implements UserService {
 
         String encodedNewPassword = passwordEncoder.encode(request.newPassword());
         user.setPassword(encodedNewPassword);
+    }
+
+    private String trimProfileField(String value, String fieldName) {
+        if (value == null) {
+            return null;
+        }
+
+        String trimmedValue = value.trim();
+
+        if (trimmedValue.isBlank()) {
+            throw new RestApiException(HttpStatus.BAD_REQUEST, fieldName + " cannot be blank");
+        }
+        return trimmedValue;
     }
 }

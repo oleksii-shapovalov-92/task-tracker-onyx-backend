@@ -43,7 +43,11 @@ public interface UserApi extends UserApiSwaggerDoc {
     );
 
     @Override
-    @PatchMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RequestMapping(
+            value = "/me/avatar",
+            method = {RequestMethod.POST, RequestMethod.PATCH},
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     ResponseEntity<UserResponseDto> updateCurrentUserAvatar(
             @Parameter(
                     description = "Avatar image file. Supported types: JPEG, PNG, WEBP. Max size: 5 MB",
